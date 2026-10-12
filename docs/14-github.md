@@ -54,7 +54,12 @@ procedures 3, obd_elm 16, obd_log 4, vin 9.
       `obd-logger` (osobne — firmware).
 - [ ] Linki w `docs/11-logger.md` do `obd-logger` — przy osobnych repo podać URL GitHuba.
 
-## 6. Pierwszy push (can-toolkit → mirican-studio)
+## 6. Pierwszy push — ✅ WYKONANO 2026-10-12
+
+Repo publiczne: https://github.com/mirican/mirican-studio i https://github.com/mirican/obd-logger
+(commity: e-mail noreply `84533131+mirican@users.noreply.github.com`; GitHub wykrywa licencję MIT).
+
+(poniżej komendy referencyjne)
 
 ```powershell
 cd <folder projektu>\can-toolkit
