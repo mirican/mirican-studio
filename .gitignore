@@ -22,3 +22,7 @@ Thumbs.db
 desktop.ini
 *.tmp
 *~
+
+# wewnętrzne dokumenty robocze (lokalne, nie publikujemy)
+/handoff.md
+/roadmap.md

@@ -42,12 +42,11 @@ procedures 3, obd_elm 16, obd_log 4, vin 9.
 
 ## 5. Checklista przed pierwszym push
 
-- [ ] **Licencja** — brak w repo. Rekomendacja: **MIT** (`LICENSE`);
-      alternatywy: GPL-3.0, Apache-2.0.
+- [x] **Licencja** — **MIT dodana** (`LICENSE` w obu repo, 2026-10-12).
       Uwaga: `dbc/opendbc/` to zewnętrzne zbiory — przed publikacją sprawdzić
       nagłówki licencyjne pojedynczych DBC (część pochodzi z projektów open source).
-- [ ] **`handoff.md` / `roadmap.md`** — publikować czy nie? (handoff = dziennik sesji;
-      opcja: do `docs/dev/` albo zostawić — ścieżki osobiste już zneutralizowane).
+- [x] **`handoff.md` / `roadmap.md`** — **nie publikujemy** (zostają lokalnie; usunięte
+      z indeksu git i dopisane do `.gitignore`).
 - [ ] **README** — dodać przed push: sekcję „Zrzuty" (np. `design/gui-v29…`),
       wymagania (Windows, Python 3.11+), disclaimer bezpieczeństwa (praca na postoju,
       na własną odpowiedzialność), sekcję „Licencja”; opcjonalnie krótkie EN summary.

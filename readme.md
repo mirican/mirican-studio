@@ -148,5 +148,4 @@ Szczegóły: `docs/03-architektura.md`.
 * `docs/12-obd-vlinker.md` — diagnostyka OBD-II przez adapter ELM327 (vLinker MS).
 * `docs/13-vin.md` — dekoder VIN: co da się ustalić per marka (research + źródła).
 * `docs/14-github.md` — przygotowanie do publikacji na GitHub (audyt + checklista).
-* `ROADMAP.md` — plan rozwoju (Etap 1 zrobiony ✅, Etap 2 — GUI w toku).
 * python-can: https://python-can.readthedocs.io • cantools: https://github.com/cantools/cantools
