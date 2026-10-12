@@ -1,0 +1,24 @@
+# miriCAN Studio — pliki pomijane w git
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+
+# logi i dane robocze (folder zostaje w repo)
+logs/*
+!logs/.gitkeep
+
+# konfiguracja maszynowa (tworzona lokalnie; wartości domyślne są w kodzie)
+config/logger.json
+config/obd.json
+
+# systemowe
+Thumbs.db
+desktop.ini
+*.tmp
+*~

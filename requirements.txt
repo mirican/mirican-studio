@@ -1,0 +1,9 @@
+python-can>=4.6.0
+pyserial>=3.5
+cantools>=44.0.0
+fastapi>=0.110
+uvicorn>=0.29
+websockets>=12.0
+can-isotp>=2.0
+udsoncan>=1.26
+mcp>=2.0

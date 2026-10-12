@@ -1,0 +1,14 @@
+{
+  "name": "bmw",
+  "description": "BMW - profil startowy (DBC dla serii E9x/E8x; uzupełniamy po podaniu modelu i rocznika)",
+  "bitrate": 500000,
+  "dbc": "dbc/opendbc/bmw_e9x_e8x.dbc",
+  "bus_hint": "PT-CAN (napęd) - OBD-II pin 6/14, 500 kbit/s; K-CAN (komfort) zwykle 100 kbit/s (np. E9x)",
+  "notes": [
+    "DBC: opendbc bmw_e9x_e8x.dbc - nazwy sygnałów dla E9x/E8x",
+    "Typowe magistrale BMW: PT-CAN 500k (napęd), K-CAN 100k (komfort), F-CAN 500k (podwozie)",
+    "Po podaniu modelu i rocznika: dobierzemy właściwy DBC / uzupełnimy profil",
+    "Kolejność rozgryzania: sniff (log) -> diff dwóch nagrań (co się zmienia przy akcji) -> checksum (liczniki/sumy kandydatów na komendy)",
+    "Uwaga: BMW stosuje liczniki i sumy kontrolne w wielu ramkach - przed wysyłką użyj `py -m canstudio checksum <log> --id <ID>`"
+  ]
+}

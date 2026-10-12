@@ -1,0 +1,65 @@
+VERSION "canstudio auto-DBC 1.4 (2026-10-07 10:14) - demo_b"
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: Vector__XXX
+
+BO_ 304 MSG_130: 8 Vector__XXX
+ SG_ b0_const : 0|8@1+ (1,0) [3|3] "" Vector__XXX
+ SG_ b1_counter : 8|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ b2_const : 16|8@1+ (1,0) [16|16] "" Vector__XXX
+ SG_ b3_var : 24|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ b4_const : 32|8@1+ (1,0) [128|128] "" Vector__XXX
+ SG_ b5_const : 40|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b6_const : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b7_checksum : 56|8@1+ (1,0) [0|255] "" Vector__XXX
+BO_ 416 MSG_1A0: 4 Vector__XXX
+ SG_ b0_const : 0|8@1+ (1,0) [1|1] "" Vector__XXX
+ SG_ b1_const : 8|8@1+ (1,0) [2|2] "" Vector__XXX
+ SG_ b2_const : 16|8@1+ (1,0) [3|3] "" Vector__XXX
+ SG_ b3_counter : 24|8@1+ (1,0) [0|255] "" Vector__XXX
+
+CM_ BO_ 304 "auto-DBC: frames=300, period~10.0ms (100.0Hz); b0=const, b1=counter, b2=const, b3=var, b4=const, b5=const, b6=const, b7=checksum";
+CM_ BO_ 416 "auto-DBC: frames=100, period~30.0ms (33.3Hz); b0=const, b1=const, b2=const, b3=counter";
+CM_ SG_ 304 b0_const "const value 0x03";
+CM_ SG_ 304 b1_counter "class: counter (cały bajt +1)";
+CM_ SG_ 304 b2_const "const value 0x10";
+CM_ SG_ 304 b3_var "class: var (mały zakres, różnych 5, zmian 299)";
+CM_ SG_ 304 b4_const "const value 0x80";
+CM_ SG_ 304 b5_const "const value 0x00";
+CM_ SG_ 304 b6_const "const value 0x00";
+CM_ SG_ 304 b7_checksum "class: checksum (xor8 (cała ramka = 0, typowo ostatni bajt))";
+CM_ SG_ 416 b0_const "const value 0x01";
+CM_ SG_ 416 b1_const "const value 0x02";
+CM_ SG_ 416 b2_const "const value 0x03";
+CM_ SG_ 416 b3_counter "class: counter (cały bajt +1)";

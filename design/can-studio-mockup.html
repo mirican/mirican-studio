@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="amber">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAN Studio — makieta (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CAN STUDIO — makieta interfejsu (dane demonstracyjne, bez backendu)
+   Kierunki: A bursztyn (warsztat) / B fosfor (oscyloskop) / C lód (serwis)
+   ============================================================ */
+:root{
+  --bg:#0a0c0f; --panel:#101418; --panel2:#141920; --line:#1e252e;
+  --text:#dfe6ee; --dim:#8593a3; --faint:#4c5866;
+  --accent:#ffb300; --accent2:#ff7a00; --ok:#59d98f; --warn:#ff7a7a;
+  --mono:"IBM Plex Mono","Cascadia Mono",Consolas,monospace;
+  --sans:"Archivo","Segoe UI",sans-serif;
+}
+html[data-theme="green"]{ --accent:#4cff9f; --accent2:#19c46a; }
+html[data-theme="ice"]{ --accent:#5fd0ff; --accent2:#3a8dff; }
+
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:
+    radial-gradient(1200px 500px at 75% -10%, rgba(255,255,255,.03), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(255,255,255,.012) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(255,255,255,.012) 23px 24px),
+    var(--bg);
+  color:var(--text); font-family:var(--sans); font-size:13px; height:100vh;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+
+/* ---------- top bar ---------- */
+header{
+  display:flex; align-items:center; gap:16px; padding:10px 16px;
+  border-bottom:1px solid var(--line); background:linear-gradient(180deg,#12161b,#0e1217);
+}
+.logo{display:flex; align-items:center; gap:10px; user-select:none}
+.logo .mark{
+  width:22px; height:22px; border:2px solid var(--accent); border-radius:3px;
+  position:relative; box-shadow:0 0 12px -2px var(--accent);
+}
+.logo .mark::before,.logo .mark::after{content:""; position:absolute; background:var(--accent)}
+.logo .mark::before{left:4px; right:4px; top:5px; height:2px}
+.logo .mark::after{left:4px; right:4px; bottom:5px; height:2px}
+.logo h1{font-size:14px; letter-spacing:.22em; font-weight:700}
+.logo small{color:var(--faint); font-family:var(--mono); font-size:10px; letter-spacing:.08em}
+
+.conn{display:flex; align-items:center; gap:8px; margin-left:8px;
+  border:1px solid var(--line); border-radius:4px; padding:6px 10px; background:#0c1014;
+  font-family:var(--mono); font-size:11px; color:var(--dim)}
+.conn b{color:var(--text); font-weight:500}
+.conn .dot{width:7px; height:7px; border-radius:50%; background:var(--ok);
+  box-shadow:0 0 8px var(--ok); animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.45}}
+
+.spacer{flex:1}
+.btn{
+  font-family:var(--sans); font-size:11px; letter-spacing:.06em; color:var(--text);
+  background:#151b22; border:1px solid var(--line); border-radius:4px;
+  padding:7px 12px; cursor:pointer; display:flex; align-items:center; gap:7px;
+  transition:border-color .15s, background .15s;
+}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{border-color:var(--accent); color:var(--accent)}
+.btn.rec b{width:8px; height:8px; border-radius:50%; background:var(--warn); display:inline-block}
+.btn.rec.on{background:#2a1214; border-color:var(--warn)}
+.btn.rec.on b{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+
+.themes{display:flex; gap:6px; margin-left:10px}
+.themes .chip{width:22px; height:22px; border-radius:50%; cursor:pointer;
+  border:2px solid var(--line)}
+.themes .chip[data-t="amber"]{background:#ffb300}
+.themes .chip[data-t="green"]{background:#4cff9f}
+.themes .chip[data-t="ice"]{background:#5fd0ff}
+.themes .chip.active{border-color:#fff}
+
+/* ---------- layout ---------- */
+.shell{display:grid; grid-template-columns:196px 1fr 300px; flex:1; min-height:0}
+.rail{border-right:1px solid var(--line); background:linear-gradient(180deg,#0e1217,#0b0f13);
+  padding:14px 10px; display:flex; flex-direction:column; gap:4px}
+.rail .sec{font-family:var(--mono); font-size:10px; color:var(--faint);
+  letter-spacing:.14em; margin:10px 6px 6px}
+.nav{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:4px;
+  color:var(--dim); cursor:pointer; border:1px solid transparent}
+.nav .ico{width:16px; text-align:center; font-family:var(--mono); color:var(--faint)}
+.nav:hover{color:var(--text); background:#12181f}
+.nav.active{color:var(--accent); background:#171a12; border-color:color-mix(in srgb, var(--accent) 35%, transparent)}
+.nav.active .ico{color:var(--accent)}
+.rail .profile{margin-top:auto; border:1px solid var(--line); border-radius:5px;
+  padding:10px; background:#0c1014}
+.rail .profile .tag{font-family:var(--mono); font-size:10px; color:var(--accent); letter-spacing:.1em}
+.rail .profile .name{font-weight:600; margin:4px 0 2px}
+.rail .profile .meta{font-family:var(--mono); font-size:10px; color:var(--dim); line-height:1.5}
+
+/* ---------- main ---------- */
+main{display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; padding:12px; gap:12px}
+.panel{border:1px solid var(--line); border-radius:6px; background:var(--panel);
+  display:flex; flex-direction:column; min-height:0; overflow:hidden;
+  box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 8px 24px -18px #000}
+.panel .head{display:flex; align-items:center; gap:10px; padding:9px 12px;
+  border-bottom:1px solid var(--line); background:#131820}
+.panel .head h2{font-size:11px; letter-spacing:.16em; font-weight:600; color:var(--dim)}
+.panel .head .tools{margin-left:auto; display:flex; gap:6px; align-items:center}
+.inp{background:#0b0f13; border:1px solid var(--line); border-radius:4px; color:var(--text);
+  font-family:var(--mono); font-size:11px; padding:5px 8px; width:130px}
+.inp::placeholder{color:var(--faint)}
+.fchip{font-family:var(--mono); font-size:10px; color:var(--dim); border:1px solid var(--line);
+  border-radius:3px; padding:3px 7px; cursor:pointer}
+.fchip.on{color:var(--accent); border-color:var(--accent)}
+
+/* trace table */
+.trace{flex:1; overflow:auto; font-family:var(--mono); font-size:11.5px}
+.trace::-webkit-scrollbar{width:9px} .trace::-webkit-scrollbar-thumb{background:#202834;border-radius:4px}
+table{width:100%; border-collapse:collapse}
+thead th{position:sticky; top:0; background:#131820; color:var(--faint); font-weight:500;
+  text-align:left; padding:6px 8px; font-size:10px; letter-spacing:.08em; z-index:2}
+tbody td{padding:4px 8px; border-top:1px solid #151b22; white-space:nowrap}
+tbody tr:hover{background:#141a21}
+tbody tr.sel{background:#182028; outline:1px solid color-mix(in srgb, var(--accent) 45%, transparent)}
+.tm{color:var(--faint)}
+.idchip{display:inline-block; min-width:44px; text-align:center; padding:1px 5px; border-radius:3px;
+  font-weight:600; font-size:11px}
+.nm{color:var(--dim)}
+.byte{padding:0 3px; border-radius:2px}
+.byte.chg{background:color-mix(in srgb, var(--accent) 26%, transparent); color:#fff}
+.byte.live{animation:flash .7s ease-out}
+@keyframes flash{0%{background:color-mix(in srgb, var(--accent) 65%, transparent)} 100%{background:transparent}}
+.freq{color:var(--faint)}
+
+/* right column */
+.right{display:flex; flex-direction:column; gap:12px; min-height:0; overflow:auto; padding-right:2px}
+.kv{display:grid; grid-template-columns:1fr auto; gap:4px 10px; font-family:var(--mono); font-size:11px; padding:10px 12px}
+.kv .k{color:var(--dim)} .kv .v{text-align:right}
+.kv .v.hl{color:var(--accent)}
+.sig{display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px;
+  padding:4px 12px; border-top:1px dashed #1a212a}
+.sig .lbl{color:var(--dim)} .sig .val{color:var(--text)} .sig .u{color:var(--faint)}
+.tx{display:flex; gap:6px; padding:10px 12px; align-items:center}
+.tx .inp{width:auto; flex:1}
+.btn.small{padding:5px 9px; font-size:11px}
+
+/* ---------- scope ---------- */
+.scope{flex:0 0 auto; height:170px; position:relative}
+canvas{width:100%; height:100%; display:block}
+.legend{position:absolute; top:8px; right:10px; display:flex; gap:12px;
+  font-family:var(--mono); font-size:10px; color:var(--dim)}
+.legend i{display:inline-block; width:14px; height:2px; margin-right:5px; vertical-align:middle}
+
+/* ---------- status bar ---------- */
+footer{border-top:1px solid var(--line); background:#0d1116; display:flex; gap:22px;
+  padding:7px 16px; font-family:var(--mono); font-size:10.5px; color:var(--dim)}
+footer b{color:var(--text); font-weight:500}
+footer .sep{color:var(--faint)}
+.badge{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="mark"></div>
+    <div>
+      <h1>CAN STUDIO</h1>
+      <small>makiety v0.1 · dane demonstracyjne</small>
+    </div>
+  </div>
+
+  <div class="conn">
+    <span class="dot"></span>
+    <span>slcan · <b>COM7</b> · <b>500 kbit/s</b> · <b>M1</b></span>
+  </div>
+
+  <div class="spacer"></div>
+
+  <button class="btn primary" id="runBtn">⏸ PAUZA&nbsp;<span style="color:var(--dim)">[space]</span></button>
+  <button class="btn rec" id="recBtn"><b></b> REC [R]</button>
+
+  <div class="themes" title="Wariant akcentu: A/B/C">
+    <div class="chip active" data-t="amber" title="A · bursztyn (warsztat)"></div>
+    <div class="chip" data-t="green" title="B · fosfor (oscyloskop)"></div>
+    <div class="chip" data-t="ice" title="C · lód (serwis)"></div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- ============ left rail ============ -->
+  <nav class="rail">
+    <div class="sec">WORKSPACE</div>
+    <div class="nav active"><span class="ico">≋</span> Live Trace</div>
+    <div class="nav"><span class="ico">⌁</span> Sygnały / DBC</div>
+    <div class="nav"><span class="ico">⇪</span> Wysyłka (TX)</div>
+    <div class="nav"><span class="ico">▤</span> Logi</div>
+    <div class="nav"><span class="ico">Δ</span> Diff / Changes</div>
+    <div class="nav"><span class="ico">#</span> Liczniki / CRC</div>
+    <div class="nav"><span class="ico">⚙</span> Ustawienia</div>
+
+    <div class="profile">
+      <div class="tag">PROFIL POJAZDU</div>
+      <div class="name">BMW E9x / E8x</div>
+      <div class="meta">PT-CAN @ 500k · DBC: bmw_e9x_e8x<br>K-CAN: 100k · (podgląd)</div>
+    </div>
+  </nav>
+
+  <!-- ============ main ============ -->
+  <main>
+    <section class="panel" style="flex:1">
+      <div class="head">
+        <h2>LIVE TRACE</h2>
+        <div class="tools">
+          <span class="fchip on">Wszystkie</span>
+          <span class="fchip">PT-CAN</span>
+          <span class="fchip">F-CAN</span>
+          <input class="inp" placeholder="filtr ID / nazwy…">
+          <button class="btn small" id="clearBtn">Wyczyść</button>
+        </div>
+      </div>
+      <div class="trace" id="trace">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:88px">CZAS</th><th style="width:64px">ID</th>
+              <th>NAZWA (DBC)</th><th style="width:44px">DLC</th>
+              <th>DANE (8 B)</th><th style="width:56px">FREQ</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel scope">
+      <div class="head" style="justify-content:space-between">
+        <h2>SIGNAL SCOPE</h2>
+        <span style="font-family:var(--mono); font-size:10px; color:var(--faint)">ostatnie 12 s</span>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>EngineSpeed</span>
+        <span><i style="background:#5fa8ff"></i>VehicleSpeed</span>
+        <span><i style="background:#b78cff"></i>CoolantTemp</span>
+      </div>
+      <canvas id="scope"></canvas>
+    </section>
+  </main>
+
+  <!-- ============ right column ============ -->
+  <aside class="right">
+    <section class="panel">
+      <div class="head"><h2>ID INSIGHT</h2></div>
+      <div class="kv">
+        <span class="k">ID</span><span class="v hl" id="ins-id">0x130</span>
+        <span class="k">Nazwa</span><span class="v" id="ins-name">DME1_Status</span>
+        <span class="k">Freq</span><span class="v">20 Hz</span>
+        <span class="k">DLC</span><span class="v">8</span>
+        <span class="k">Licznik</span><span class="v">bajt 1 · +1</span>
+        <span class="k">Suma</span><span class="v">xor8 (ramka=0)</span>
+      </div>
+      <div id="sigs"></div>
+    </section>
+
+    <section class="panel">
+      <div class="head"><h2>QUICK TX</h2></div>
+      <div class="tx">
+        <input class="inp" placeholder="0x130" id="txId">
+        <input class="inp" placeholder="DE AD BE EF" id="txData">
+        <button class="btn small primary">➤</button>
+      </div>
+      <div style="padding:0 12px 10px; font-family:var(--mono); font-size:10px; color:var(--faint)">
+        wymaga trybu normalnego (ACK) · potwierdź przed wysyłką
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head"><h2>SESSION</h2></div>
+      <div class="kv">
+        <span class="k">Log</span><span class="v" id="logName">—</span>
+        <span class="k">Ramki /s</span><span class="v hl" id="statFps">0</span>
+        <span class="k">Obciążenie</span><span class="v" id="statLoad">0%</span>
+        <span class="k">Bufor</span><span class="v" id="statBuf">0</span>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<footer>
+  <span>RX <b id="fRx">0</b></span>
+  <span class="sep">|</span>
+  <span>TX <b id="fTx">0</b></span>
+  <span class="sep">|</span>
+  <span>ID <b id="fIds">0</b></span>
+  <span class="sep">|</span>
+  <span>T <b id="fUp">00:00</b></span>
+  <span class="spacer"></span>
+  <span class="badge" id="fState">TRACE RUNNING</span>
+</footer>
+
+<script>
+"use strict";
+/* ---------- dane demonstracyjne ---------- */
+const ID_DEFS = [
+  {id:0x130, name:"DME1_Status",   color:"#ffb300", dlc:8, rate:20},
+  {id:0x1A0, name:"DME2_Data",     color:"#4fa3ff", dlc:8, rate:20},
+  {id:0x316, name:"EGS_Torque",    color:"#ff7a7a", dlc:8, rate:20},
+  {id:0x1D2, name:"DSC_Stability", color:"#ffd766", dlc:8, rate:20},
+  {id:0x0AA, name:"Kombi_Anzeige", color:"#b78cff", dlc:8, rate:10},
+  {id:0x0C0, name:"CAS_Status",    color:"#59d98f", dlc:6, rate:5},
+];
+const SIGS_BY_ID = {
+  0x130:[["EngineSpeed","rpm"],["ThrottlePos","%"],["CoolantTemp","°C"],["BatteryV","V"]],
+  0x1A0:[["Airmass","mg/str"],["Lambda","λ"],["RailP","bar"],["InjTime","ms"]],
+  0x316:[["TorqueReq","Nm"],["GearBoxT","°C"],["Converter","%"],["Mode","enum"]],
+  0x1D2:[["YawRate","°/s"],["SteerAngle","°"],["BrakePress","bar"],["LatAccel","g"]],
+  0x0AA:[["Speed","km/h"],["Odo","km"],["Ambient","°C"],["Fuel","l"]],
+  0x0C0:[["KeyState","enum"],["DoorFL","enum"],["Terminal","enum"]],
+};
+
+const state = {
+  running:true, rec:false, t0:performance.now(), tSim:0,
+  frames:[], byId:{}, counters:{}, txCount:0, sel:0x130,
+  hist:{spd:[], eng:[], tmp:[]},
+};
+const fmt = (n,l=2)=>n.toFixed(l).padStart(l,"");
+const hex2 = b=>b.toString(16).toUpperCase().padStart(2,"0");
+
+/* ---------- generowanie ramek ---------- */
+const sin = t=>Math.sin(t*2*Math.PI);
+function mkPayload(def, i){
+  const c = (state.counters[def.id]=(state.counters[def.id]??-1)+1)&0xFF;
+  const eng = 900 + 2100*(0.5+0.5*sin(i/37));
+  const spd = 84 + 36*sin(i/53);
+  const tmp = 88 + 3*sin(i/211);
+  switch(def.id){
+    case 0x130: return [0x03,c,0x10, (spd|0)&0xFF, 0x80, (eng/8)&0xFF, (eng*2.44)&0xFF, 0]
+                 .map((v,k,a)=>k===7? a.reduce((x,y)=>x^y,0):v);
+    case 0x1A0: return [0x24,c,(i*7)&0xFF,(i*3)&0xFF,0x0F,(tmp|0)&0xFF,0x00,(0x50^c)&0xFF];
+    case 0x316: return [c,0x01,(i*5)&0xFF,0x7E,0x80,0x00,(i*2)&0xFF,0];
+    case 0x1D2: return [0x11,c,(spd/2)&0xFF,0x00,0x40,(i)&0xFF,0x00,0];
+    case 0x0AA: return [c,(spd|0)&0xFF,((spd*2)|0)&0xFF,0x30,(tmp|0)&0xFF,0x00,0x02,0];
+    default:    return [c,0x01,0x02,0x03,0x04,0x05];
+  }
+}
+function appendRows(){
+  const tbody = document.getElementById("rows");
+  const now = new Date();
+  for(const def of ID_DEFS){
+    if(Math.random()*25 > def.rate/2) continue;
+    const i = Math.floor(state.tSim/50);
+    const data = mkPayload(def, i);
+    const prev = state.byId[def.id];
+    const tr = document.createElement("tr");
+    if(def.id===state.sel) tr.classList.add("sel");
+    const t = (state.tSim/1000);
+    let cells = data.map((b,k)=>{
+      const chg = prev && prev[k]!==b;
+      return `<span class="byte ${chg?"chg live":""}">${hex2(b)}</span>`;
+    }).join("");
+    tr.innerHTML =
+      `<td class="tm">${fmt(t,3)}</td>`+
+      `<td><span class="idchip" style="color:${def.color};background:${def.color}1c">${def.id.toString(16).toUpperCase().padStart(3,"0")}</span></td>`+
+      `<td class="nm">${def.name}</td>`+
+      `<td>${def.dlc}</td><td>${cells}</td><td class="freq">${def.rate} Hz</td>`;
+    tr.onclick = ()=>selectId(def.id);
+    tbody.appendChild(tr);
+    while(tbody.children.length>220) tbody.removeChild(tbody.firstChild);
+    state.byId[def.id] = data;
+
+    if(def.id===0x0AA){ state.hist.spd.push(84+36*sin(state.tSim/2600)); }
+    if(def.id===0x130){ state.hist.eng.push(900+2100*(0.5+0.5*sin(state.tSim/1850)));
+                        state.hist.tmp.push(88+3*sin(state.tSim/10500)); }
+  }
+  if(state.running) tbody.parentElement.parentElement.scrollTop = 1e9;
+  updateFooter();
+}
+function selectId(id){
+  state.sel = id;
+  const def = ID_DEFS.find(d=>d.id===id);
+  document.getElementById("ins-id").textContent = "0x"+id.toString(16).toUpperCase().padStart(3,"0");
+  document.getElementById("ins-name").textContent = def?def.name:"—";
+  const sigs = SIGS_BY_ID[id]||[];
+  document.getElementById("sigs").innerHTML = sigs.map((s,i)=>{
+    const v = (i===0? (state.hist.eng.at(-1)||2400): (i===1?12.4: 88.2+i)).toFixed(1);
+    return `<div class="sig"><span class="lbl">${s[0]}</span><span><span class="val">${v}</span> <span class="u">${s[1]}</span></span></div>`;
+  }).join("");
+}
+
+/* ---------- scope ---------- */
+const cv = document.getElementById("scope"), ctx = cv.getContext("2d");
+function drawScope(){
+  const w = cv.width = cv.clientWidth*devicePixelRatio;
+  const h = cv.height = cv.clientHeight*devicePixelRatio;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = 1;
+  for(let x=0;x<w;x+=w/12){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=h;y>0;y-=h/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  const series = [
+    [state.hist.eng, var_(getComputedStyle(document.documentElement).getPropertyValue("--accent"))||"#ffb300", 0,4000],
+    [state.hist.spd, "#5fa8ff", 0,140],
+    [state.hist.tmp, "#b78cff", 60,110],
+  ];
+  for(const [data,color,lo,hi] of series){
+    if(data.length<2) continue;
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.6*devicePixelRatio;
+    const n = Math.min(data.length, w/2);
+    for(let i=0;i<n;i++){
+      const v = data[data.length-n+i]; const x = i/(n-1)*w;
+      const y = h - ((v-lo)/(hi-lo))*h;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+  }
+  while(state.hist.eng.length>800){state.hist.eng.shift();state.hist.spd.shift();state.hist.tmp.shift();}
+}
+function var_(v){v=v&&v.trim();return v||null}
+
+/* ---------- pętla ---------- */
+let framesTotal=0;
+setInterval(()=>{
+  if(!state.running) return;
+  state.tSim += 125;
+  for(let k=0;k<3;k++) appendRows();
+  if(state.tSim%250===0) drawScope();
+},125);
+setInterval(updateFooter,500);
+
+function updateFooter(){
+  const ids = Object.keys(state.byId).length;
+  framesTotal = document.querySelectorAll("#rows tr").length + (state.rec? state.frames.length:0);
+  document.getElementById("fRx").textContent = framesTotal.toLocaleString("pl-PL");
+  document.getElementById("fTx").textContent = state.txCount;
+  document.getElementById("fIds").textContent = ids;
+  const up = Math.floor((performance.now()-state.t0)/1000);
+  document.getElementById("fUp").textContent =
+    String(Math.floor(up/60)).padStart(2,"0")+":"+String(up%60).padStart(2,"0");
+  document.getElementById("statFps").textContent = state.running? "≈ 47" : "0";
+  document.getElementById("statLoad").textContent = state.running? "12.4%" : "0%";
+  document.getElementById("statBuf").textContent = framesTotal+" ramek";
+  document.getElementById("fState").textContent = state.running? "TRACE RUNNING":"TRACE PAUSED";
+}
+
+/* ---------- interakcje ---------- */
+const runBtn=document.getElementById("runBtn"), recBtn=document.getElementById("recBtn");
+runBtn.onclick=()=>{state.running=!state.running;
+  runBtn.innerHTML = state.running? "⏸ PAUZA&nbsp;<span style='color:var(--dim)'>[space]</span>"
+                                  : "▶ START&nbsp;<span style='color:var(--dim)'>[space]</span>";
+  updateFooter(); drawScope();};
+recBtn.onclick=()=>{state.rec=!state.rec; recBtn.classList.toggle("on",state.rec);
+  const d=new Date(), pad=n=>String(n).padStart(2,"0");
+  document.getElementById("logName").textContent = state.rec?
+    `sniff_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.log` : "—";};
+document.getElementById("clearBtn").onclick=()=>{document.getElementById("rows").innerHTML="";};
+addEventListener("keydown",e=>{
+  if(e.code==="Space"){e.preventDefault();runBtn.click();}
+  if(e.key==="r"||e.key==="R"){recBtn.click();}
+});
+document.querySelectorAll(".themes .chip").forEach(ch=>ch.onclick=()=>{
+  document.documentElement.dataset.theme=ch.dataset.t;
+  document.querySelectorAll(".themes .chip").forEach(c=>c.classList.toggle("active",c===ch));
+  drawScope();
+});
+document.querySelectorAll(".nav").forEach(n=>n.onclick=()=>{
+  document.querySelectorAll(".nav").forEach(x=>x.classList.remove("active"));
+  n.classList.add("active");
+});
+
+selectId(0x130); drawScope(); updateFooter();
+</script>
+</body>
+</html>

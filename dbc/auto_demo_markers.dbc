@@ -1,0 +1,73 @@
+VERSION "canstudio auto-DBC 1.2 (2026-10-07 01:47) - demo_markers"
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: Vector__XXX
+
+BO_ 714 MSG_2CA: 8 Vector__XXX
+ SG_ b0_const : 0|8@1+ (1,0) [17|17] "" Vector__XXX
+ SG_ b1_const : 8|8@1+ (1,0) [34|34] "" Vector__XXX
+ SG_ b2_switch : 16|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ b3_const : 24|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b4_const : 32|8@1+ (1,0) [64|64] "" Vector__XXX
+ SG_ b5_const : 40|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b6_const : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b7_const : 56|8@1+ (1,0) [0|0] "" Vector__XXX
+BO_ 304 MSG_130: 8 Vector__XXX
+ SG_ b0_const : 0|8@1+ (1,0) [3|3] "" Vector__XXX
+ SG_ b1_sensor : 8|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ b2_const : 16|8@1+ (1,0) [16|16] "" Vector__XXX
+ SG_ b3_const : 24|8@1+ (1,0) [48|48] "" Vector__XXX
+ SG_ b4_const : 32|8@1+ (1,0) [128|128] "" Vector__XXX
+ SG_ b5_const : 40|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b6_const : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b7_checksum : 56|8@1+ (1,0) [0|255] "" Vector__XXX
+
+CM_ BO_ 714 "auto-DBC: frames=500, period~40.0ms (25.0Hz); b0=const, b1=const, b2=switch, b3=const, b4=const, b5=const, b6=const, b7=const";
+CM_ BO_ 304 "auto-DBC: frames=125, period~160.0ms (6.2Hz); b0=const, b1=sensor, b2=const, b3=const, b4=const, b5=const, b6=const, b7=checksum";
+CM_ SG_ 714 b0_const "const value 0x11";
+CM_ SG_ 714 b1_const "const value 0x22";
+CM_ SG_ 714 b2_switch "class: switch ([0x00, 0x01], zmian 8)";
+CM_ SG_ 714 b3_const "const value 0x00";
+CM_ SG_ 714 b4_const "const value 0x40";
+CM_ SG_ 714 b5_const "const value 0x00";
+CM_ SG_ 714 b6_const "const value 0x00";
+CM_ SG_ 714 b7_const "const value 0x00";
+CM_ SG_ 304 b0_const "const value 0x03";
+CM_ SG_ 304 b1_sensor "class: sensor (zakres 0–252, zmian 124)";
+CM_ SG_ 304 b2_const "const value 0x10";
+CM_ SG_ 304 b3_const "const value 0x30";
+CM_ SG_ 304 b4_const "const value 0x80";
+CM_ SG_ 304 b5_const "const value 0x00";
+CM_ SG_ 304 b6_const "const value 0x00";
+CM_ SG_ 304 b7_checksum "class: checksum (xor8 (cała ramka = 0, typowo ostatni bajt))";

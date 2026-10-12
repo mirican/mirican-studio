@@ -1,0 +1,2789 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="amber">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>miriCAN Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#101418; --panel2:#141920; --line:#1e252e;
+  --text:#dfe6ee; --dim:#8593a3; --faint:#4c5866;
+  --accent:#ffb300; --accent2:#ff7a00; --ok:#59d98f; --warn:#ff7a7a;
+  --mono:"IBM Plex Mono","Cascadia Mono",Consolas,monospace;
+  --sans:"Archivo","Segoe UI",sans-serif;
+}
+html[data-theme="green"]{ --accent:#4cff9f; --accent2:#19c46a; }
+html[data-theme="ice"]{ --accent:#5fd0ff; --accent2:#3a8dff; }
+*{box-sizing:border-box; margin:0; padding:0}
+.hidden{display:none!important}
+.fhidden{display:none!important}
+body{
+  background:
+    radial-gradient(1200px 500px at 75% -10%, rgba(255,255,255,.03), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(255,255,255,.012) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(255,255,255,.012) 23px 24px),
+    var(--bg);
+  color:var(--text); font-family:var(--sans); font-size:13px; height:100vh;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+header{display:flex; align-items:center; gap:14px; padding:9px 14px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#12161b,#0e1217)}
+.logo{display:flex; align-items:center; gap:10px; user-select:none}
+.logo .mark{width:22px; height:22px; border:2px solid var(--accent); border-radius:3px; position:relative; box-shadow:0 0 12px -2px var(--accent)}
+.logo .mark::before,.logo .mark::after{content:""; position:absolute; background:var(--accent)}
+.logo .mark::before{left:4px; right:4px; top:5px; height:2px}
+.logo .mark::after{left:4px; right:4px; bottom:5px; height:2px}
+.logo h1{font-size:14px; letter-spacing:.22em; font-weight:700}
+.ver{font-family:var(--mono); font-size:10px; color:var(--faint); border:1px solid var(--line); border-radius:3px; padding:2px 6px; align-self:center}
+.conn{display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:4px; padding:6px 10px; background:#0c1014; font-family:var(--mono); font-size:11px; color:var(--dim); white-space:nowrap}
+.conn b{color:var(--text); font-weight:500}
+.conn .dot{width:7px; height:7px; border-radius:50%; background:var(--faint)}
+.conn.on .dot{background:var(--ok); box-shadow:0 0 8px var(--ok); animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.45}}
+.spacer{flex:1}
+.btn{font-family:var(--sans); font-size:11px; letter-spacing:.06em; color:var(--text); background:#151b22; border:1px solid var(--line); border-radius:4px; padding:7px 12px; cursor:pointer; display:flex; align-items:center; gap:7px; transition:border-color .15s, background .15s; white-space:nowrap}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{border-color:var(--accent); color:var(--accent)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.rec b{width:8px; height:8px; border-radius:50%; background:var(--warn); display:inline-block}
+.btn.rec.on{background:#2a1214; border-color:var(--warn)}
+.btn.rec.on b{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.themes{display:flex; gap:6px; margin-left:6px}
+.themes .chip{width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid var(--line)}
+.themes .chip[data-t="amber"]{background:#ffb300}
+.themes .chip[data-t="green"]{background:#4cff9f}
+.themes .chip[data-t="ice"]{background:#5fd0ff}
+.themes .chip.active{border-color:#fff}
+
+.toolbar{display:flex; align-items:center; gap:8px; padding:7px 14px; border-bottom:1px solid var(--line); background:#0d1116; flex-wrap:wrap}
+.toolbar label.lbl{font-family:var(--mono); font-size:10px; color:var(--faint); letter-spacing:.08em}
+select.inp, input.inp{background:#0b0f13; border:1px solid var(--line); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:11px; padding:5px 7px}
+input.inp::placeholder{color:var(--faint)}
+select.inp:disabled, input.inp:disabled{opacity:.5}
+input[type="checkbox"]{accent-color:var(--accent); transform:translateY(1px)}
+.chk{display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:11px; color:var(--dim); cursor:pointer; white-space:nowrap}
+#connDetails{display:flex; align-items:center; gap:8px}
+body.state-connected #ifaceSel, body.state-connected #portSel, body.state-connected #portsRefresh{display:none}
+#logName{font-family:var(--mono); font-size:10px; color:var(--accent); margin-left:auto}
+
+.shell{display:grid; grid-template-columns:190px 1fr var(--asideW,340px); grid-template-rows:minmax(0,1fr) auto; flex:1; min-height:0}
+.rail{border-right:1px solid var(--line); background:linear-gradient(180deg,#0e1217,#0b0f13); padding:14px 10px; display:flex; flex-direction:column; gap:4px}
+.rail .sec{font-family:var(--mono); font-size:10px; color:var(--faint); letter-spacing:.14em; margin:10px 6px 6px}
+.nav{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:4px; color:var(--dim); cursor:default; border:1px solid transparent}
+.nav .ico{width:16px; text-align:center; font-family:var(--mono); color:var(--faint)}
+.nav.active{color:var(--accent); background:#171a12; border-color:color-mix(in srgb, var(--accent) 35%, transparent)}
+.nav.active .ico{color:var(--accent)}
+.nav .soon{margin-left:auto; font-size:9px; color:var(--faint); font-family:var(--mono)}
+.rail .profile{margin-top:auto; border:1px solid var(--line); border-radius:5px; padding:10px; background:#0c1014}
+.rail .profile .tag{font-family:var(--mono); font-size:10px; color:var(--accent); letter-spacing:.1em}
+.rail .profile .name{font-weight:600; margin:4px 0 2px}
+.rail .profile .meta{font-family:var(--mono); font-size:10px; color:var(--dim); line-height:1.5}
+
+main{display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; padding:12px; gap:12px}
+.panel{border:1px solid var(--line); border-radius:6px; background:var(--panel); display:flex; flex-direction:column; min-height:0; overflow:hidden; box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 8px 24px -18px #000}
+.panel .head{display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid var(--line); background:#131820; flex-wrap:wrap}
+.panel .head h2{font-size:11px; letter-spacing:.16em; font-weight:600; color:var(--dim); white-space:nowrap}
+.panel .head .tools{margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+.fchip{font-family:var(--mono); font-size:10px; color:var(--dim); border:1px solid var(--line); border-radius:3px; padding:3px 7px; cursor:pointer; background:transparent}
+.fchip.on{color:var(--accent); border-color:var(--accent)}
+.hidechip{font-family:var(--mono); font-size:10px; color:var(--warn); border:1px solid #3a2226; border-radius:3px; padding:3px 7px; cursor:pointer}
+#filterInp{width:140px}
+.seg{display:flex; border:1px solid var(--line); border-radius:4px; overflow:hidden}
+.seg button{font-family:var(--mono); font-size:10px; color:var(--dim); background:#0b0f13; border:none; padding:4px 9px; cursor:pointer}
+.seg button.on{color:var(--accent); background:#171a12}
+.trace{flex:1; overflow:auto; font-family:var(--mono); font-size:11.5px}
+.trace::-webkit-scrollbar{width:9px}.trace::-webkit-scrollbar-thumb{background:#202834;border-radius:4px}
+table{width:100%; border-collapse:collapse}
+thead th{position:sticky; top:0; background:#131820; color:var(--faint); font-weight:500; text-align:left; padding:6px 8px; font-size:10px; letter-spacing:.08em; z-index:2}
+tbody td{padding:4px 8px; border-top:1px solid #151b22; white-space:nowrap}
+tbody tr:hover{background:#141a21}
+tbody tr.sel{background:#182028; outline:1px solid color-mix(in srgb, var(--accent) 45%, transparent)}
+.tm{color:var(--faint)}
+.idchip{display:inline-block; min-width:44px; text-align:center; padding:1px 5px; border-radius:3px; font-weight:600; font-size:11px; cursor:pointer}
+.idchip.ext{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.nm{color:var(--dim)}
+.byte{padding:0 3px; border-radius:2px}
+.byte.chg{background:color-mix(in srgb, var(--accent) 26%, transparent); color:#fff}
+.freq{color:var(--faint)}
+.empty{padding:26px; text-align:center; color:var(--faint); font-family:var(--mono); font-size:11px}
+
+.right{position:relative; display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden; padding-right:2px}
+.dock{grid-column:1/-1; border-top:1px solid var(--line); background:#0d1116; display:flex; flex-direction:column; min-height:90px; height:230px; position:relative}
+.dock .head{display:flex; align-items:center; gap:10px; padding:6px 12px; border-bottom:1px solid var(--line)}
+.dock .head h2{font-size:11px; letter-spacing:.16em; font-weight:600; color:var(--dim); white-space:nowrap}
+.dock .dbody{display:flex; gap:0; padding:6px 12px 8px; min-height:0; flex:1}
+.dock .col{min-width:0; min-height:0; overflow:auto; flex:1 1 0; height:100%}
+.dock .col.k1c{margin-right:5px}
+.dock .col.k2c{margin-left:5px; margin-right:5px}
+.dock .col.k3c{border:1px solid rgba(120,200,160,.30); background:linear-gradient(180deg,rgba(120,200,160,.07),rgba(9,12,16,.6)); border-radius:5px; padding:4px 8px; margin-left:5px}
+.dock .col.k1c{border:1px solid rgba(96,160,255,.30); background:linear-gradient(180deg,rgba(96,160,255,.07),rgba(9,12,16,.6)); border-radius:5px; padding:4px 8px}
+.dock .col.k2c{border:1px solid rgba(240,190,90,.30); background:linear-gradient(180deg,rgba(240,190,90,.07),rgba(9,12,16,.6)); border-radius:5px; padding:4px 8px}
+.dock.collapsed{height:auto}
+.dockgrip{position:absolute; top:-5px; left:0; right:0; height:12px; cursor:row-resize; z-index:6; touch-action:none}
+.dockgrip::after{content:""; position:absolute; left:50%; margin-left:-32px; top:4px; width:64px; height:4px; border-radius:2px; background:#4a586c}
+.dockgrip:hover::after{background:var(--accent)}
+.dockgrip:hover{background:rgba(255,183,0,.10)}
+.vsplit{flex:0 0 12px; cursor:col-resize; position:relative; touch-action:none}
+.vsplit::after{content:""; position:absolute; left:5px; top:4px; bottom:4px; width:3px; background:#4a586c; border-radius:2px}
+.vsplit:hover::after{background:var(--accent)}
+.asidegrip{position:absolute; left:-6px; top:0; bottom:0; width:12px; cursor:col-resize; z-index:6; touch-action:none}
+.asidegrip::after{content:""; position:absolute; top:50%; left:4px; width:4px; height:56px; margin-top:-28px; border-radius:2px; background:#4a586c}
+.asidegrip:hover::after{background:var(--accent)}
+.asidegrip:hover{background:rgba(255,183,0,.08)}
+.dock.collapsed .dbody{display:none}
+.dock.collapsed #dockEmpty{display:none !important}
+.tabs{display:flex; gap:6px}
+.tabs .tab{flex:1; font-family:var(--sans); font-size:11px; letter-spacing:.05em; color:var(--dim); background:#101418; border:1px solid var(--line); border-radius:5px; padding:8px 6px; cursor:pointer}
+.tabs .tab.on{color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, transparent); background:#171a12}
+.tabpane{display:none; overflow:auto}
+.tabpane.on{display:flex; flex-direction:column; flex:1; min-height:0}
+.kv{display:grid; grid-template-columns:1fr auto; gap:6px 12px; font-family:var(--mono); font-size:12.5px; padding:11px 14px}
+.kv .k{color:var(--dim)} .kv .v{text-align:right; overflow:hidden; text-overflow:ellipsis; max-width:190px} .kv .v.hl{color:var(--accent)}
+.sig{display:grid; grid-template-columns:minmax(0,1fr) auto 92px 34px; align-items:center; gap:8px; font-family:var(--mono); font-size:12.5px; padding:5px 12px; border-top:1px dashed #1a212a}
+.sig:first-child{border-top:none}
+.sig .lbl{color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sig .val{color:var(--text); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sig .u{color:var(--faint)}
+.sig .meta{color:#d9b25a; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px}
+.sig.flash{background:#1c2331}
+.warnlbl{color:var(--warn)}
+.lnk{font-family:var(--mono); font-size:9px; color:#d9b25a; border:1px solid #4a3d1f; background:#191408; border-radius:3px; padding:0 4px; cursor:pointer; white-space:nowrap}
+.lnk:hover{color:#ffd766; border-color:#7a6526}
+.cls .lnks{margin-left:auto; display:flex; gap:4px; flex-wrap:wrap}
+.sig .fchip{justify-self:center}
+.cls{display:flex; gap:10px; font-family:var(--mono); font-size:12px; padding:4px 12px; align-items:baseline}
+.cls .b{color:var(--faint)} .cls .k{color:var(--accent); font-weight:600} .cls .d{color:var(--dim); overflow:hidden; text-overflow:ellipsis}
+.cls .k.k2{color:#5fa8ff}
+.tx{display:flex; gap:6px; padding:10px 12px 4px; align-items:center; flex-wrap:wrap}
+.tx .inp{flex:1; min-width:70px}
+.txrow{display:flex; gap:6px; padding:4px 12px; align-items:center; flex-wrap:wrap}
+.arm{display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:var(--warn); cursor:pointer; user-select:none}
+.txlog{height:110px; overflow:auto; margin:6px 12px 4px; padding:6px 8px; background:#0b0f13; border:1px solid var(--line); border-radius:4px; font-family:var(--mono); font-size:10px; color:var(--dim); line-height:1.6}
+.txlog .tx{color:var(--accent)} .txlog .notice{color:var(--ok)}
+.hint{padding:6px 12px 10px; font-family:var(--mono); font-size:10px; color:var(--faint)}
+
+.scope{flex:0 0 auto; height:192px; position:relative}
+canvas{width:100%; height:100%; display:block}
+.tl{display:inline-flex; align-items:center; gap:4px}
+.tl i{display:inline-block; width:12px; height:2px}
+.tl b{color:var(--text); font-weight:500}
+.tl .x{cursor:pointer; color:var(--faint)}
+.tl .x:hover{color:var(--warn)}
+
+footer{border-top:1px solid var(--line); background:#0d1116; display:flex; gap:20px; padding:7px 16px; font-family:var(--mono); font-size:10.5px; color:var(--dim)}
+footer b{color:var(--text); font-weight:500}
+footer .sep{color:var(--faint)}
+.badge{color:var(--accent)}
+#toasts{position:fixed; right:14px; bottom:44px; display:flex; flex-direction:column; gap:8px; z-index:50}
+.toast{background:#141b22; border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:4px; padding:8px 12px; font-family:var(--mono); font-size:11px; color:var(--text); box-shadow:0 8px 24px -12px #000; max-width:380px}
+.toast.warn{border-left-color:var(--warn)} .toast.ok{border-left-color:var(--ok)}
+.btn.run{border-color:var(--ok); color:var(--ok); box-shadow:inset 0 0 0 1px rgba(89,217,143,.4)}
+
+/* ---------- modal (Analiza / MITM) ---------- */
+.nav.clickable{cursor:pointer}
+.nav.clickable:hover{color:var(--text); background:#12181f}
+#overlay{position:fixed; inset:0; background:rgba(4,6,9,.72); backdrop-filter:blur(2px); z-index:100; display:flex; align-items:center; justify-content:center}
+.modal{width:min(1000px, 94vw); max-height:88vh; background:var(--panel); border:1px solid var(--line); border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 80px -30px #000}
+.mhead{display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); background:#131820}
+.mhead h2{font-size:12px; letter-spacing:.16em; color:var(--text)}
+.mbody{padding:12px 14px; overflow:auto; display:flex; flex-direction:column; gap:10px}
+.mcontent{display:flex; flex-direction:column; gap:10px}
+.mtabs{display:flex; gap:6px; flex-wrap:wrap}
+.ltabs{display:flex; gap:6px; flex-wrap:wrap}
+.otabs{display:flex; gap:6px; flex-wrap:wrap}
+.obdgrid{display:flex; gap:10px; align-items:stretch}
+.obdcol{display:flex; flex-direction:column; gap:8px; border:1px solid #1e2833; border-radius:6px; background:#0d1116; padding:8px 10px; min-width:0; max-height:56vh; overflow:auto}
+.obdcol-left{flex:0 0 245px}
+.obdcol-mid{flex:1 1 auto}
+.obdcol-right{flex:0 0 285px}
+.modal.floating{position:absolute; margin:0; max-height:none}
+.modalresize{position:absolute; right:0; bottom:0; width:18px; height:18px; cursor:nwse-resize; z-index:6}
+.modalresize::after{content:""; position:absolute; right:4px; bottom:4px; width:9px; height:9px; border-right:2px solid var(--faint); border-bottom:2px solid var(--faint)}
+.mrow{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.mresults{display:flex; flex-direction:column; gap:8px}
+.mcard{border:1px solid var(--line); border-radius:5px; background:#0d1116; padding:8px 10px}
+.mcardh{font-family:var(--mono); font-size:11px; color:var(--accent); margin-bottom:4px}
+.mmeta{font-family:var(--mono); font-size:10.5px; color:var(--dim)}
+.merr{font-family:var(--mono); font-size:11px; color:var(--warn); padding:8px 0}
+.cls.dim{opacity:.55}
+.rulesbox{flex:1; border:1px solid var(--line); border-radius:5px; padding:8px 10px; background:#0d1116; min-width:380px}
+.rulehdr{font-family:var(--mono); font-size:10px; color:var(--faint); letter-spacing:.1em; margin-bottom:6px; display:flex; gap:8px; align-items:center}
+.rrow{display:flex; gap:6px; align-items:center; margin:3px 0}
+.rrow .lbl{font-size:9px}
+.hint2{font-family:var(--mono); font-size:10px; color:var(--dim)}
+.card{margin:8px 10px 0; border:1px solid #1e2833; border-radius:8px; background:#10151c; overflow:hidden}
+.card.k1{border-color:rgba(96,160,255,.30); background:linear-gradient(180deg,rgba(96,160,255,.10),rgba(96,160,255,.02))}
+.card.k2{border-color:rgba(240,190,90,.30); background:linear-gradient(180deg,rgba(240,190,90,.10),rgba(240,190,90,.02))}
+.card .kv{padding:8px 12px 10px}
+.chead{display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-family:var(--mono); font-size:10px; letter-spacing:.14em; color:#9fb4c8; padding:8px 12px 3px}
+.chead .shint{letter-spacing:0; color:var(--dim); white-space:nowrap}
+#insId{font-size:15px; font-weight:600}
+.mitmlogbox{flex:1; min-width:260px}
+
+/* ---------- Sniffer (overlay pulsów) ---------- */
+#pulseOverlay{position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; background:rgba(3,5,8,.97)}
+.pulseBox{text-align:center; display:flex; flex-direction:column; align-items:center; gap:24px}
+.pulseState{font-family:var(--sans); font-size:26px; letter-spacing:.22em; color:var(--dim)}
+.pulseCircle{width:250px; height:250px; border-radius:50%; border:6px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:70px; color:var(--text); transition:border-color .25s, box-shadow .25s, background .25s}
+.pulseCircle.prep{border-color:var(--accent); color:var(--accent); box-shadow:0 0 50px -12px var(--accent)}
+.pulseCircle.hold{border-color:var(--ok); background:#0f1d14; color:var(--ok); box-shadow:0 0 80px -8px var(--ok)}
+.pulseCircle.rest{border-color:var(--faint); color:var(--dim)}
+.pulseHint{font-family:var(--mono); font-size:12px; color:var(--dim); max-width:460px}
+.fchip:active, .btn:active{filter:brightness(1.35)}
+.fchip.pulse{color:var(--ok); border-color:var(--ok); box-shadow:0 0 0 1px rgba(89,217,143,.35) inset}
+#obPidPick label.chk, #obCfgPids label.chk{cursor:pointer; border-radius:4px; padding:1px 4px}
+#obPidPick label.chk:hover, #obCfgPids label.chk:hover{background:#141b22; color:var(--text)}
+#obPidPick label.chk:active, #obCfgPids label.chk:active{color:var(--accent)}
+#obPidPick input, #obCfgPids input{accent-color:var(--accent)}
+</style>
+</head>
+<body class="state-offline">
+
+<header>
+  <div class="logo"><div class="mark"></div><div><h1>miriCAN STUDIO</h1></div></div>
+  <span class="ver" id="ver">v2.4</span>
+  <div class="conn" id="connPill"><span class="dot"></span><span id="connText">nie połączono</span></div>
+  <div class="spacer"></div>
+  <button class="btn" id="runBtn" title="space">⏸ PAUZA</button>
+  <button class="btn rec" id="recBtn" title="R"><b></b> REC</button>
+  <button class="btn" id="markBtn" title="M">✦ MARK</button>
+  <div class="themes" title="Wariant akcentu">
+    <div class="chip active" data-t="amber" title="A · bursztyn"></div>
+    <div class="chip" data-t="green" title="B · fosfor"></div>
+    <div class="chip" data-t="ice" title="C · lód"></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label class="lbl">INTERFEJS</label>
+  <select class="inp" id="ifaceSel">
+    <option value="slcan">slcan — Canable USB</option>
+    <option value="virtual">virtual — demo (bez sprzętu)</option>
+  </select>
+  <label class="lbl">PORT</label>
+  <select class="inp" id="portSel" style="min-width:130px"></select>
+  <button class="btn" id="portsRefresh" title="odśwież listę portów" style="padding:5px 9px">⟳</button>
+  <span class="hint2" id="portHint"></span>
+  <button class="btn primary" id="connectBtn">POŁĄCZ</button>
+  <button class="btn" id="gearBtn" title="opcje połączenia" style="padding:5px 10px">⚙</button>
+  <span id="connDetails" class="hidden">
+    <label class="lbl">PRĘDKOŚĆ</label>
+    <select class="inp" id="bitrateSel">
+      <option value="1000000">1 Mbit/s</option>
+      <option value="500000" selected>500 kbit/s</option>
+      <option value="250000">250 kbit/s</option>
+      <option value="125000">125 kbit/s</option>
+      <option value="100000">100 kbit/s</option>
+      <option value="83300">83.3 kbit/s</option>
+      <option value="50000">50 kbit/s</option>
+    </select>
+    <label class="chk" id="silentWrap"><input type="checkbox" id="silentChk" checked> silent</label>
+    <label class="chk" id="demoWrap" style="display:none"><input type="checkbox" id="demoChk" checked> generator demo</label>
+  </span>
+  <label class="lbl">DBC</label>
+  <select class="inp" id="dbcSel" style="max-width:220px"><option value="">— brak —</option></select>
+  <span id="logName"></span>
+</div>
+
+<div class="shell">
+  <nav class="rail">
+    <div class="sec">WORKSPACE</div>
+    <div class="nav active"><span class="ico">≋</span> Live Trace</div>
+    <div class="nav clickable" id="navAnalyze"><span class="ico">▤</span> Analiza logów</div>
+    <div class="nav clickable" id="navDiff"><span class="ico">Δ</span> Diff / Changes</div>
+    <div class="nav clickable" id="navChecksum"><span class="ico">#</span> Liczniki / CRC</div>
+    <div class="nav clickable" id="navMarkers"><span class="ico">✦</span> Znaczniki</div>
+    <div class="nav clickable" id="navMitm"><span class="ico">⇄</span> MITM</div>
+    <div class="nav clickable" id="navButton"><span class="ico">🎯</span> Sniffer</div>
+    <div class="nav clickable" id="navUds"><span class="ico">⚙</span> Diagnostyka</div>
+    <div class="nav clickable" id="navObd"><span class="ico">🚗</span> Diagnostyka OBD</div>
+    <div class="nav clickable" id="navLogger"><span class="ico">📊</span> Logger OBD</div>
+    <div class="nav clickable" id="navSignals"><span class="ico">⌁</span> Sygnały / DBC</div>
+    <div class="nav clickable" id="navLog"><span class="ico">🗂</span> Logi</div>
+    <div class="profile">
+      <div class="tag">PROFIL POJAZDU</div>
+      <div class="name" id="profName">bmw</div>
+      <div class="meta" id="profMeta">anotacje: 0</div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="panel" style="flex:1">
+      <div class="head">
+        <h2>LIVE TRACE</h2>
+        <div class="seg" title="Sposób prezentacji ramek">
+          <button id="viewStream" class="on">Strumień</button>
+          <button id="viewGrouped">Grupowany</button>
+        </div>
+        <div class="tools">
+          <input class="inp" id="filterInp" placeholder="filtr ID / nazwy…">
+          <span id="hideChips"></span>
+          <button class="btn" id="clearBtn" style="padding:5px 9px;font-size:11px">Wyczyść</button>
+        </div>
+      </div>
+      <div class="trace" id="trace">
+        <table>
+          <thead><tr>
+            <th style="width:84px">CZAS</th><th style="width:86px">ID</th>
+            <th>NAZWA (DBC)</th><th style="width:64px">RAMEK</th>
+            <th>DANE</th><th style="width:64px">FREQ</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="empty" id="emptyMsg">Brak danych — połącz się z magistralą (albo wybierz „virtual — demo").</div>
+      </div>
+    </section>
+
+    <section class="panel scope hidden" id="scopePanel">
+      <div class="head">
+        <h2>SIGNAL SCOPE</h2>
+        <div class="tools">
+          <button class="fchip" id="autoByteBtn" title="przypnij najbardziej zmienny bajt">✦ auto</button>
+          <span id="byteBtns" style="display:flex;gap:4px"></span>
+          <span style="font-family:var(--mono); font-size:10px; color:var(--faint); margin-left:6px">~240 próbek</span>
+          <button class="fchip" id="expCsv" title="eksport danych wykresów do CSV">⤓CSV</button>
+          <button class="fchip" id="expPng" title="zapisz wykres jako PNG">⤓PNG</button>
+        </div>
+      </div>
+      <div id="traceLegend" style="display:flex; gap:12px; flex-wrap:wrap; padding:4px 12px 0; font-family:var(--mono); font-size:10px; color:var(--dim)"></div>
+      <canvas id="scope"></canvas>
+    </section>
+  </main>
+
+  <aside class="right">
+    <div class="asidegrip" id="asideGrip" title="Przeciągnij, aby zmienić szerokość (dwuklik = reset)"></div>
+    <div class="tabs">
+      <button class="tab on" data-tab="ins">Inspektor</button>
+      <button class="tab" data-tab="tx">Wysyłka</button>
+      <button class="tab" data-tab="ses">Sesja</button>
+    </div>
+
+    <section class="panel tabpane on" id="tab-ins">
+      <div class="card k0">
+        <div class="chead">RAMKA</div>
+        <div class="kv">
+          <span class="k">ID</span><span class="v hl" id="insId">— wybierz ramkę</span>
+          <span class="k">Ramek</span><span class="v" id="insCount">—</span>
+          <span class="k">Okres</span><span class="v" id="insPeriod">—</span>
+          <span class="k">Ostatnie dane</span><span class="v" id="insLast">—</span>
+        </div>
+        <div class="mrow" style="padding:8px 12px 4px; border-top:1px dashed #1a212a">
+          <span class="lbl">NAZWA</span>
+          <input class="inp" id="annName" placeholder="np. status silnika" style="flex:1; min-width:110px">
+        </div>
+        <div class="mrow" style="padding:0 12px 10px">
+          <span class="lbl">NOTATKA</span>
+          <input class="inp" id="annNote" placeholder="komentarz (Enter = zapisz)" style="flex:1; min-width:110px">
+          <button class="fchip" id="annSave" title="Zapisz anotację do profilu pojazdu (profiles/)">💾 zapisz</button>
+        </div>
+      </div>
+      <!-- klasyfikacja bajtów i sygnały DBC: panel u dołu ekranu (dock) -->
+      <div class="card k0">
+        <div class="mrow" style="padding:8px 12px 4px">
+          <span class="lbl">TRIGGER</span>
+          <select class="inp" id="trigByte" style="min-width:58px"></select>
+          <span class="lbl">−</span><input class="inp" id="trigPre" value="5" style="width:38px">
+          <span class="lbl">+</span><input class="inp" id="trigPost" value="5" style="width:38px">
+          <label class="chk"><input type="checkbox" id="trigKeep"> ciągły</label>
+        </div>
+        <div class="mrow" style="padding:0 12px 10px">
+          <button class="fchip" id="trigArm">🎯 nagraj przy zmianie</button>
+          <span class="hint2" id="trigState"></span>
+        </div>
+      </div>
+      <div class="hint" id="insHint">Kliknij wiersz na liście — tu ustawisz nazwę/notatkę;
+        klasyfikacja bajtów i sygnały DBC pokazują się w panelu u dołu ekranu.</div>
+    </section>
+
+    <section class="panel tabpane" id="tab-tx">
+      <div class="tx">
+        <input class="inp" id="txId" placeholder="ID (0x130)" style="max-width:96px">
+        <input class="inp" id="txData" placeholder="DANE hex">
+      </div>
+      <div class="txrow">
+        <label class="arm"><input type="checkbox" id="txArm"> TX UZBROJONY</label>
+        <div class="spacer"></div>
+        <button class="btn primary" id="txSendBtn" style="padding:5px 12px">WYŚLIJ</button>
+        <button class="btn" id="txStopBtn" style="padding:5px 10px">STOP</button>
+      </div>
+      <div class="txrow">
+        <button class="fchip" id="txAdvBtn" style="border:none">▸ zaawansowane</button>
+      </div>
+      <div id="txAdvanced" class="hidden">
+        <div class="txrow">
+          <input class="inp" id="txCount" placeholder="ile (0=∞)" style="max-width:80px">
+          <input class="inp" id="txInterval" placeholder="co ms" style="max-width:72px">
+          <input class="inp" id="txSweep" placeholder="sweep 3:0-255" style="max-width:120px">
+        </div>
+        <div class="txrow">
+          <input class="inp" id="txCounter" placeholder="licznik: bajt" style="max-width:105px">
+          <input class="inp" id="txChecksum" placeholder="suma: b:algo" style="max-width:115px">
+          <label class="chk"><input type="checkbox" id="txExt"> ext</label>
+        </div>
+      </div>
+      <div class="txlog" id="txlog"></div>
+      <div class="hint">Wymaga trybu normalnego (bez silent) i zaznaczonego „TX UZBROJONY".</div>
+    </section>
+
+    <section class="panel tabpane" id="tab-ses">
+      <div class="kv">
+        <span class="k">Połączenie</span><span class="v" id="sesConn">—</span>
+        <span class="k">Ramki /s</span><span class="v hl" id="sesFps">0</span>
+        <span class="k">Ramek razem</span><span class="v" id="sesTotal">0</span>
+        <span class="k">Unikalnych ID</span><span class="v" id="sesIds">0</span>
+        <span class="k">REC</span><span class="v" id="sesRec">—</span>
+        <span class="k">Znaczniki</span><span class="v" id="sesMarks">0</span>
+        <span class="k">DBC</span><span class="v" id="sesDbc">—</span>
+        <span class="k">TX</span><span class="v" id="sesTx">—</span>
+      </div>
+      <div class="mrow" style="padding:10px 12px 0">
+        <span class="lbl">PROFIL / ANOTACJE</span>
+        <select class="inp" id="profSel" style="min-width:150px"></select>
+        <button class="fchip" id="profLoad">wczytaj</button>
+        <button class="fchip" id="profRefresh" title="odśwież listę profili">⟳</button>
+      </div>
+      <!-- AGENT (MCP): panel przeniesiony do docka u dołu ekranu -->
+      <div class="hint">Log zapisuje się do katalogu <b>logs/</b> — analiza: panel
+        <b>▤ Analiza logów</b> (albo CLI: correlate / discover / checksum).</div>
+    </section>
+  </aside>
+
+  <section class="dock" id="dockPanel">
+    <div class="dockgrip" id="dockGrip" title="Przeciągnij, aby zmienić wysokość panelu (dwuklik = reset)"></div>
+    <div class="head">
+      <h2>ANALIZA RAMKI — KLASYFIKACJA I DBC</h2>
+      <span class="hint2" id="dockId">— wybierz ramkę powyżej</span>
+      <span class="hint2" style="opacity:.6">· krawędzie: przeciągnij, dwuklik = reset</span>
+      <div class="spacer"></div>
+      <button class="fchip" id="dockToggle" title="Zwiń / rozwiń panel">▾ zwiń</button>
+    </div>
+    <div class="dbody">
+      <div class="col k1c" id="cardCls" style="display:none">
+        <div class="chead">KLASYFIKACJA BAJTÓW</div>
+        <div id="insClasses"></div>
+      </div>
+      <div class="vsplit" id="dockVs" title="Przeciągnij, aby zmienić proporcje kolumn (dwuklik = reset)"></div>
+      <div class="col k2c" id="cardSig" style="display:none">
+        <div class="chead"><span>SYGNAŁY (DBC)</span><span class="shint">＋ dodaje do wykresu · ✓ usuwa</span></div>
+        <div id="insDecoded"></div>
+      </div>
+      <div class="vsplit" id="dockVs2" title="Przeciągnij, aby zmienić szerokość SYGNAŁÓW (dwuklik = reset)"></div>
+      <div class="col k3c" id="cardExtra">
+        <div class="chead">AGENT (MCP)</div>
+        <div style="padding:4px 6px">
+          <div class="hint2" id="mcpState">—</div>
+          <div class="mrow" style="margin-top:8px; gap:6px">
+            <button class="fchip" id="mcpCopy" title="Skopiuj konfigurację MCP (JSON)">📋 kopiuj konfigurację</button>
+            <button class="fchip" id="mcpRefresh" title="Odśwież status">⟳</button>
+          </div>
+          <div class="hint2" style="margin-top:8px">Narzędzia <b>can_*</b> (analiza, UDS, logi) i <b>gui_*</b> (to Studio).<br>
+            Przykład: <b>mcporter call mirican-studio.can_ports</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="hint2" id="dockEmpty" style="padding:10px 12px 13px">Kliknij ramkę w Live Trace — tutaj pokażą się klasyfikacja bajtów (licznik/suma/przycisk/sensor) i sygnały z DBC.</div>
+  </section>
+</div>
+
+<footer>
+  <span>RX <b id="fRx">0</b></span><span class="sep">|</span>
+  <span>ID <b id="fIds">0</b></span><span class="sep">|</span>
+  <span>FPS <b id="fFps">0</b></span><span class="sep">|</span>
+  <span>Wierszy <b id="fBuf">0</b></span>
+  <span class="spacer"></span>
+  <span class="badge" id="fState">OFFLINE</span>
+</footer>
+<div id="overlay" class="hidden">
+  <div class="modal">
+    <div class="mhead">
+      <h2 id="mTitle">Analiza logów</h2>
+      <div class="spacer"></div>
+      <button class="btn" id="mClose" style="padding:5px 10px">✕ Zamknij</button>
+    </div>
+    <div class="mbody">
+
+      <div id="mAnalyze" class="mcontent">
+        <div class="mtabs">
+          <button class="fchip on" data-mtab="quick">Przegląd (liczniki/sumy)</button>
+          <button class="fchip" data-mtab="diff">Diff dwóch logów</button>
+          <button class="fchip" data-mtab="markers">Znaczniki (przyciski)</button>
+        </div>
+        <div id="mtab-quick" class="mcontent">
+          <div class="mrow">
+            <select class="inp" id="anFile" style="min-width:300px"></select>
+            <button class="btn" id="anRefresh" title="odśwież listę">⟳</button>
+            <button class="btn primary" id="anRun">Analizuj</button>
+            <button class="btn" id="anAutodbc" title="wstępny plik DBC z tego logu → dbc/auto_*.dbc">⚙ Auto-DBC</button>
+            <span class="hint2" id="anStatus"></span>
+          </div>
+          <div id="anResults" class="mresults"></div>
+        </div>
+        <div id="mtab-diff" class="mcontent hidden">
+          <div class="mrow">
+            <span class="lbl">LOG A</span><select class="inp" id="dfA" style="min-width:240px"></select>
+            <span class="lbl">LOG B</span><select class="inp" id="dfB" style="min-width:240px"></select>
+            <button class="btn primary" id="dfRun">Porównaj</button>
+          </div>
+          <div id="dfResults" class="mresults"></div>
+        </div>
+        <div id="mtab-markers" class="mcontent hidden">
+          <div class="mrow">
+            <select class="inp" id="mkFile" style="min-width:300px"></select>
+            <button class="btn primary" id="mkRun">Analizuj znaczniki</button>
+          </div>
+          <div id="mkResults" class="mresults"></div>
+        </div>
+      </div>
+
+      <div id="mMitm" class="mcontent hidden">
+        <div class="mrow">
+          <span class="lbl">IN</span><input class="inp" id="miIn" placeholder="slcan:COM7" style="width:140px">
+          <span class="lbl">OUT</span><input class="inp" id="miOut" placeholder="slcan:COM8" style="width:140px">
+          <label class="chk"><input type="checkbox" id="miDemo" checked> demo (wirtualne magistrale)</label>
+          <label class="chk"><input type="checkbox" id="miTap"> TAP (tylko podgląd)</label>
+        </div>
+        <div class="mrow" style="align-items:stretch">
+          <div class="rulesbox">
+            <div class="rulehdr">REGUŁY <button class="fchip" id="miFillDemo">wypełnij demo</button></div>
+            <div class="rrow"><span class="lbl">drop ID</span><input class="inp" id="miDrop" placeholder="np. 0x2C0,0x2C1" style="width:190px"></div>
+            <div id="miSetRows"></div>
+            <div id="miCntRows"></div>
+            <div id="miChkRows"></div>
+            <div class="rrow">
+              <button class="fchip" id="miAddSet">+ ustaw bajt</button>
+              <button class="fchip" id="miAddCnt">+ licznik</button>
+              <button class="fchip" id="miAddChk">+ suma</button>
+            </div>
+          </div>
+          <div class="mitmlogbox">
+            <div class="rulehdr">PODGLĄD NA ŻYWO</div>
+            <div class="txlog" id="miLog" style="height:230px; margin:0"></div>
+          </div>
+        </div>
+        <div class="mrow">
+          <label class="chk" style="color:var(--warn)"><input type="checkbox" id="miConfirm"> potwierdzam: BENCH (wymagane dla realnych portów)</label>
+          <div class="spacer"></div>
+          <span class="hint2" id="miStatus">nieaktywne</span>
+          <button class="btn primary" id="miStart">START MITM</button>
+          <button class="btn" id="miStop">STOP</button>
+        </div>
+      </div>
+
+      <div id="mBtn" class="mcontent hidden">
+        <div class="mrow">
+          <span class="lbl">ETYKIETA</span><input class="inp" id="btnLabel" value="przycisk" style="width:130px">
+          <span class="lbl">PULSY</span><input class="inp" id="btnPulses" value="5" style="width:46px">
+          <span class="lbl">TRZYMAJ [ms]</span><input class="inp" id="btnHold" value="1500" style="width:64px">
+          <span class="lbl">PRZERWA [ms]</span><input class="inp" id="btnGap" value="2500" style="width:64px">
+          <label class="chk"><input type="checkbox" id="btnBeep" checked> dźwięk</label>
+        </div>
+        <div class="mrow">
+          <button class="btn primary" id="btnStart">⚡ START SESJI</button>
+          <span class="hint2">W trakcie sesji trzymaj przycisk dokładnie wtedy, gdy ekran świeci NA ZIELONO.</span>
+        </div>
+        <div class="mrow">
+          <span class="lbl">ALBO ANALIZA GOTOWEGO LOGU:</span>
+          <select class="inp" id="btnFile" style="min-width:300px"></select>
+          <button class="btn" id="btnAnalyze">Analizuj</button>
+        </div>
+        <div id="btnResults" class="mresults"></div>
+      </div>
+
+      <div id="mUds" class="mcontent hidden">
+        <div class="mrow" style="color:var(--warn); font-size:11px">
+          TX: UDS wysyła ramki na magistralę — używaj tylko na postoju lub ławce testowej.
+          Zapis DID i kasowanie DTC wymagają zaznaczenia „potwierdzam”; reset sterownika tylko z CLI (uds reset --yes).
+          Każda operacja trafia do logu logs/uds_*.log.
+        </div>
+        <div class="mrow">
+          <span class="lbl">ZAKRES SKANU</span><input class="inp" id="udRange" value="600-6FF" style="width:110px">
+          <span class="lbl">OFFSET</span><input class="inp" id="udOffset" value="8" style="width:40px">
+          <span class="lbl">TIMEOUT ms</span><input class="inp" id="udTimeout" value="50" style="width:52px">
+          <button class="btn primary" id="udScan">Skanuj ECU</button>
+          <span class="hint2" id="udScanStatus"></span>
+        </div>
+        <div class="mrow">
+          <span class="lbl">STEROWNIK txid</span><input class="inp" id="udTx" placeholder="np. 6F1" style="width:76px">
+          <span class="lbl">rxid</span><input class="inp" id="udRx" placeholder="auto +8" style="width:76px">
+          <span class="lbl">SESJA</span>
+          <select class="inp" id="udSession" style="width:104px">
+            <option value="">brak</option><option value="1">1 — default</option><option value="3">3 — extended</option>
+          </select>
+          <span class="lbl">DID</span><input class="inp" id="udDids" value="F190,F18C,F187,F188,F189,F18B,F191" style="width:250px">
+          <button class="btn primary" id="udRead">Czytaj DID</button>
+          <button class="btn" id="udDtc">Odczytaj DTC</button>
+        </div>
+        <div class="mrow">
+          <span class="lbl">ZAPIS DID</span><input class="inp" id="udWDid" placeholder="F1A0" style="width:76px">
+          <span class="lbl">DANE hex</span><input class="inp" id="udWData" placeholder="01 02 03" style="width:150px">
+          <label class="chk"><input type="checkbox" id="udWConfirm"> potwierdzam zapis</label>
+          <button class="btn" id="udWrite">Zapisz DID</button>
+          <span class="lbl" style="margin-left:10px">|</span>
+          <label class="chk"><input type="checkbox" id="udCConfirm"> potwierdzam kasowanie</label>
+          <button class="btn" id="udClear">Kasuj DTC</button>
+        </div>
+        <div class="rulehdr">WYNIKI</div>
+        <div id="udResults" class="mresults" style="max-height:260px; overflow:auto"></div>
+        <div class="rulehdr">PRZEBIEG</div>
+        <div class="txlog" id="udLog" style="height:80px; margin:0"></div>
+      </div>
+
+      <div id="mLog" class="mcontent hidden">
+        <div class="ltabs">
+          <button class="fchip on" data-ltab="stats">Statystyki</button>
+          <button class="fchip" data-ltab="trim">Przytnij</button>
+          <button class="fchip" data-ltab="replay">Odtwarzanie (z modyfikacją)</button>
+        </div>
+        <div id="ltab-stats" class="mcontent">
+          <div class="mrow">
+            <select class="inp" id="lgStatsFile" style="min-width:320px"></select>
+            <button class="btn primary" id="lgStatsRun">Analizuj</button>
+          </div>
+          <div id="lgStatsOut" class="mresults"></div>
+        </div>
+        <div id="ltab-trim" class="mcontent hidden">
+          <div class="mrow">
+            <select class="inp" id="lgTrimFile" style="min-width:280px"></select>
+            <span class="lbl">OD [s]</span><input class="inp" id="lgTrimFrom" placeholder="0" style="width:56px">
+            <span class="lbl">DO [s]</span><input class="inp" id="lgTrimTo" placeholder="koniec" style="width:64px">
+            <span class="lbl">OFFSET</span><input class="inp" id="lgTrimOff" placeholder="0" style="width:56px">
+            <span class="lbl">ILE</span><input class="inp" id="lgTrimCnt" placeholder="wszystko" style="width:70px">
+            <button class="btn primary" id="lgTrimRun">Przytnij i zapisz</button>
+          </div>
+          <div id="lgTrimOut" class="mresults"></div>
+          <div class="hint2" style="padding:0 2px">Wynik zapisuje się w logs/ jako trim_*.log (candump).</div>
+        </div>
+        <div id="ltab-replay" class="mcontent hidden">
+          <div class="mrow">
+            <select class="inp" id="lgRepFile" style="min-width:280px"></select>
+            <span class="lbl">TEMPO</span><input class="inp" id="lgRepRate" value="1" style="width:44px">
+            <label class="chk"><input type="checkbox" id="lgRepLoop"> pętla</label>
+            <span class="lbl">LIMIT</span><input class="inp" id="lgRepLimit" placeholder="wszystko" style="width:70px">
+          </div>
+          <div class="mrow" style="align-items:stretch">
+            <div class="rulesbox">
+              <div class="rulehdr">MODYFIKACJE <button class="fchip" id="lgFillDemo">wypełnij demo</button></div>
+              <div class="rrow"><span class="lbl">drop ID</span><input class="inp" id="lgDrop" placeholder="np. 0x2C0,0x2C1" style="width:190px"></div>
+              <div id="lgSetRows"></div>
+              <div id="lgCntRows"></div>
+              <div id="lgChkRows"></div>
+              <div class="rrow">
+                <button class="fchip" id="lgAddSet">+ ustaw bajt</button>
+                <button class="fchip" id="lgAddCnt">+ licznik</button>
+                <button class="fchip" id="lgAddChk">+ suma</button>
+              </div>
+            </div>
+            <div class="mitmlogbox">
+              <div class="rulehdr">PRZEBIEG</div>
+              <div class="txlog" id="lgLog" style="height:185px; margin:0"></div>
+            </div>
+          </div>
+          <div class="mrow">
+            <label class="chk" style="color:var(--warn)"><input type="checkbox" id="lgConfirm"> potwierdzam wysyłkę na magistralę (realne porty)</label>
+            <div class="spacer"></div>
+            <span class="hint2" id="lgRepState">nieaktywne</span>
+            <button class="btn primary" id="lgRepStart">START</button>
+            <button class="btn" id="lgRepStop">STOP</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mObd" class="mcontent hidden">
+        <div class="obdgrid">
+          <div class="obdcol obdcol-left">
+            <div class="rulehdr">PID-Y DO ODCZYTU <span class="hint2" id="obPidCount"></span></div>
+            <div class="mrow">
+              <button class="fchip" id="obPidAll">wszystkie</button>
+              <button class="fchip" id="obPidBasic">podstawowe</button>
+              <button class="fchip" id="obPidNone">wyczyść</button>
+            </div>
+            <div class="mrow"><span class="hint2" id="obPidSup"></span></div>
+            <div id="obPidPick" style="display:flex; flex-direction:column; gap:6px"></div>
+          </div>
+          <div class="obdcol obdcol-mid">
+            <div class="mrow">
+              <span class="lbl">PORT</span><input class="inp" id="obPort" placeholder="auto (vLinker)" style="width:120px">
+              <button class="btn primary" id="obConnect">Połącz</button>
+              <button class="btn" id="obDisconnect">Rozłącz</button>
+              <button class="btn" id="obTest">Test</button>
+            </div>
+            <div class="mrow"><span class="hint2" id="obState">nie połączono</span></div>
+            <div class="mrow">
+              <button class="btn primary" id="obRead">Czytaj raz</button>
+              <span class="lbl">INTERVAL s</span><input class="inp" id="obInterval" value="0.5" style="width:50px">
+              <button class="btn" id="obMonStart">▶ Monitor</button>
+              <button class="btn" id="obMonStop">■ Stop</button>
+              <label class="chk"><input type="checkbox" id="obSave" checked> zapis sesji (logs/)</label>
+            </div>
+            <div class="mrow">
+              <button class="btn" id="obInfo">VIN + wspierane</button>
+              <button class="btn" id="obDtc">Odczytaj DTC</button>
+              <label class="chk"><input type="checkbox" id="obDtcConfirm"> potwierdzam kasowanie</label>
+              <button class="btn" id="obDtcClear">Kasuj DTC</button>
+            </div>
+            <div class="rulehdr">WYNIKI</div>
+            <div id="obResults" class="mresults" style="flex:1; overflow:auto; min-height:70px"></div>
+            <div class="rulehdr">PRZEBIEG</div>
+            <div class="txlog" id="obLogLines" style="height:90px; margin:0"></div>
+          </div>
+          <div class="obdcol obdcol-right">
+            <div class="rulehdr" style="flex-wrap:wrap">PID-Y — WARTOŚCI
+              <span class="hint2" id="obMonState">nieaktywne</span>
+              <button class="fchip" id="obPidHideRaw" title="Ukryj nieznane PID-y (bez dekodera / bez wartości)">ukryj nieznane</button>
+            </div>
+            <div id="obPidLive" class="mresults" style="flex:1; overflow:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mLogger" class="mcontent hidden">
+        <div class="otabs">
+          <button class="fchip on" data-otab="cfg">Ustawienia</button>
+          <button class="fchip" data-otab="data">Odczyt danych</button>
+          <button class="fchip" data-otab="an">Analiza</button>
+        </div>
+        <div id="otab-cfg" class="mcontent">
+          <div class="rulehdr">PID-Y DO LOGOWANIA</div>
+          <div class="mrow" id="obCfgPids" style="gap:10px"></div>
+          <div class="mrow">
+            <span class="lbl">INTERVAL s</span><input class="inp" id="obCfgInterval" value="0.5" style="width:56px">
+            <span class="lbl">ŹRÓDŁO</span>
+            <select class="inp" id="obCfgTarget" style="width:240px">
+              <option value="pc">PC + vLinker (ten komputer)</option>
+              <option value="esp32">Logger ESP32 (WiFi) — firmware w budowie</option>
+            </select>
+            <button class="btn primary" id="obCfgSave">Zapisz ustawienia</button>
+            <span class="hint2" id="obCfgState"></span>
+          </div>
+          <div class="hint2">Ustawienia działają od ręki dla loggera PC (panel „Diagnostyka OBD" → Monitor).
+            Sekcja urządzenia ESP32 (mDNS obd-logger.local, pobieranie sesji) dołączy po bring-upie firmware.</div>
+        </div>
+        <div id="otab-data" class="mcontent hidden">
+          <div class="rulehdr">SESJE NA TYM PC (logs/obd_*.jsonl)</div>
+          <div class="mrow">
+            <select class="inp" id="obDataFile" style="min-width:320px"></select>
+            <button class="btn" id="obDataRefresh">⟳</button>
+            <button class="btn primary" id="obDataToAn">Analizuj →</button>
+          </div>
+          <div class="rulehdr">Z URZĄDZENIA (WiFi / mDNS)</div>
+          <div class="mrow">
+            <input class="inp" id="obDevUrl" value="http://obd-logger.local" style="width:230px">
+            <button class="btn" id="obDevManifest">Pobierz manifest</button>
+            <span class="hint2" id="obDevState">logger ESP32 — firmware w budowie</span>
+          </div>
+          <div id="obDevFiles" class="mresults" style="max-height:180px; overflow:auto"></div>
+        </div>
+        <div id="otab-an" class="mcontent hidden">
+          <div class="mrow">
+            <select class="inp" id="obAnFile" style="min-width:300px"></select>
+            <button class="btn primary" id="obAnRun">Statystyki</button>
+            <span class="lbl">PID</span><select class="inp" id="obAnPid" style="width:140px"></select>
+            <button class="btn" id="obAnPlot">Wykres</button>
+          </div>
+          <div id="obAnOut" class="mresults"></div>
+          <canvas id="obAnCanvas" style="height:180px; border:1px solid var(--line); border-radius:4px; background:#0b0f13"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div id="pulseOverlay" class="hidden">
+  <div class="pulseBox">
+    <div class="pulseState" id="pulseState">PRZYGOTUJ SIĘ</div>
+    <div class="pulseCircle" id="pulseCircle"><span id="pulseCount">3</span></div>
+    <div class="pulseHint" id="pulseHint"></div>
+    <button class="btn" id="pulseAbort" style="padding:5px 10px">✕ Przerwij</button>
+  </div>
+</div>
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* ================= CAN Studio — klient ================= */
+const $ = id => document.getElementById(id);
+const S = {
+  ws:null, connected:false, paused:false, pausedBuf:0,
+  sel:null, byteSel:2, hideSet:new Set(), filter:"", view:"stream",
+  names:{}, stats:{}, idHist:{}, lastBytes:{}, lastT:{}, idCount:{}, t0:null,
+  total:0, marks:0, txAdv:false, drawing:false, groupRows:{}, cfg:{}, traces: [], meta: {},
+};
+const PALETTE = ["#ffb300","#4fa3ff","#ff7a7a","#ffd766","#b78cff","#59d98f","#ff9e6d","#6fe3ff","#e58fff","#a3e635"];
+const idColor = aid => PALETTE[aid % PALETTE.length];
+const idHex = (aid, ext) => aid.toString(16).toUpperCase().padStart(ext ? 8 : 3, "0");
+
+function toast(text, cls="") {
+  const div = document.createElement("div");
+  div.className = "toast " + cls; div.textContent = text;
+  $("toasts").appendChild(div);
+  setTimeout(() => div.remove(), 3500);
+}
+function txline(text, cls="") {
+  const div = document.createElement("div");
+  div.className = cls; div.textContent = text;
+  const box = $("txlog"); box.appendChild(div);
+  while (box.children.length > 200) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+const api = (path, opts) => fetch(path, opts).then(r => r.json());
+const post = (path, body) => api(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body||{})});
+
+/* ---------- połączenie ---------- */
+async function loadPorts() {
+  try {
+    const data = await api("/api/ports");
+    const sel = $("portSel");
+    const keep = sel.value;
+    sel.innerHTML = "";
+    let canable = null;
+    for (const p of data.ports) {
+      const opt = document.createElement("option");
+      opt.value = p.device;
+      opt.textContent = p.device + (p.canable ? " · Canable" : (p.desc ? " · " + p.desc.slice(0,26) : ""));
+      sel.appendChild(opt);
+      if (p.canable) canable = p.device;
+    }
+    sel.value = keep && [...sel.options].some(o => o.value === keep) ? keep : (canable || (sel.options[0] && sel.options[0].value));
+    updatePortHint();
+  } catch (e) {}
+}
+function updatePortHint() {
+  const sel = $("portSel");
+  const hint = $("portHint");
+  if (!hint || !sel) return;
+  const hasCanable = [...sel.options].some(o => (o.textContent || "").includes("Canable"));
+  if ($("ifaceSel").value === "slcan" && !hasCanable) {
+    hint.textContent = "⚠ nie widzę Canable — kliknij ⟳ / sprawdź kabel USB";
+    hint.style.color = "var(--warn)";
+  } else {
+    hint.textContent = "";
+  }
+}
+async function loadDbcList() {
+  const data = await api("/api/dbc/list");
+  const sel = $("dbcSel");
+  for (const d of data.dbcs || []) {
+    const opt = document.createElement("option");
+    opt.value = d.path; opt.textContent = d.name;
+    sel.appendChild(opt);
+  }
+  const saved = LSget("miriCAN_dbc");
+  if (saved && [...sel.options].some(o => o.value === saved)) {
+    sel.value = saved;
+    if (sel.onchange) sel.dispatchEvent(new Event("change"));
+  }
+}
+async function connect() {
+  const iface = $("ifaceSel").value;
+  const payload = {
+    interface: iface,
+    port: iface === "virtual" ? "gui-demo" : $("portSel").value,
+    bitrate: parseInt($("bitrateSel").value, 10),
+    silent: iface === "virtual" ? true : $("silentChk").checked,
+    demo: iface === "virtual" ? $("demoChk").checked : false,
+  };
+  let res;
+  try {
+    res = await post("/api/connect", payload);
+  } catch (e) {
+    toast("Serwer nie odpowiada — ponawiam za chwilę...", "warn");
+    setTimeout(() => connect(), 900);
+    return;
+  }
+  if (!res.ok) { toast("Błąd połączenia: " + (res.error||"?"), "warn"); return; }
+  if (S.paused) $("runBtn").click();
+  clearAll();
+  S.cfg = res; S.connected = true;
+  $("emptyMsg").style.display = "none";
+  $("fState").textContent = "ŁĄCZĘ…";
+  updateConn(); attachWS();
+  $("connectBtn").blur();
+  toast("Połączono: " + (res.channel||"") + " @ " + (res.bitrate||0) + " bit/s", "ok");
+}
+async function disconnect() {
+  await post("/api/disconnect");
+  S.connected = false;
+  if (S.ws) { S.ws.onclose = null; S.ws.close(); S.ws = null; }
+  updateConn();
+}
+function updateConn() {
+  $("connPill").classList.toggle("on", S.connected);
+  $("connText").textContent = S.connected
+    ? `${S.cfg.channel||""} · ${S.cfg.bitrate ? (S.cfg.bitrate/1000)+"k" : "?"} · ${S.cfg.silent ? "silent" : "normal"}${S.cfg.demo ? " · demo" : ""}`
+    : "nie połączono";
+  $("connectBtn").textContent = S.connected ? "ROZŁĄCZ" : "POŁĄCZ";
+  $("bitrateSel").disabled = $("silentChk").disabled = $("demoChk").disabled = S.connected;
+  document.body.classList.toggle("state-connected", S.connected);
+  document.body.classList.toggle("state-offline", !S.connected);
+  $("emptyMsg").textContent = S.connected
+    ? "Czekam na ramki… (magistrala może być bezczynna)"
+    : "Brak danych — połącz się z magistralą (albo wybierz „virtual — demo”).";
+  $("fState").textContent = S.paused ? "PAUZA" : (S.connected ? "ONLINE" : "OFFLINE");
+}
+
+/* ---------- WebSocket ---------- */
+function attachWS() {
+  if (S.ws) {
+    try { S.ws.onclose = null; S.ws.close(); } catch (e) {}
+  }
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+  S.ws = ws;
+  ws.onmessage = ev => handleMsg(JSON.parse(ev.data));
+  ws.onclose = () => { setTimeout(attachWS, 400); };
+}
+function handleMsg(msg) {
+  if (msg.type === "snapshot") {
+    S.names = msg.names || {}; S.stats = msg.stats || {};
+    applyStatus(msg.status);
+    if (msg.frames && msg.frames.length) appendFrames(msg.frames);
+    return;
+  }
+  if (msg.type === "update") {
+    (msg.events || []).forEach(handleEvent);
+    if (msg.frames && msg.frames.length) appendFrames(msg.frames);
+    return;
+  }
+  if (msg.type === "stats") {
+    S.stats = msg.stats || {};
+    applyStatus(msg.session);
+    updateFreqCells();
+    return;
+  }
+}
+function handleEvent(ev) {
+  if (ev.t === "tx") txline(ev.m, "tx");
+  else if (ev.t === "notice") txline(ev.m, "notice");
+  else if (ev.t === "mitm") mitmLine(ev.m);
+  else if (ev.t === "uds") udsLine(ev.m);
+  else if (ev.t === "obd") obdEv(ev);
+  else if (ev.t === "replay") lgLine(ev.m);
+  else if (ev.t === "trigger") { toast(ev.m); refreshSession(); }
+}
+function applyStatus(st) {
+  if (!st) return;
+  if (st.config) S.cfg = st.config;
+  S.connected = !!st.connected;
+  $("sesConn").textContent = S.connected ? `${(st.config||{}).channel||""} @ ${(st.config||{}).bitrate||""}` : "—";
+  $("sesFps").textContent = st.fps ?? 0;
+  $("fFps").textContent = st.fps ?? 0;
+  $("sesTotal").textContent = st.total ?? 0;
+  $("fRx").textContent = st.total ?? 0;
+  $("sesIds").textContent = st.ids ?? 0;
+  $("fIds").textContent = st.ids ?? 0;
+  $("sesRec").textContent = st.recording ? (st.log||"").split("\\").pop() : "—";
+  $("sesDbc").textContent = st.dbc || "—";
+  S.dbc = st.dbc || null;
+  $("sesTx").textContent = st.tx && st.tx.active ? `aktywne (${st.tx.sent})` : (st.tx && st.tx.sent ? `wysłano ${st.tx.sent}` : "—");
+  if (st.recording) $("recBtn").classList.add("on"); else $("recBtn").classList.remove("on");
+  $("logName").textContent = st.recording && st.log ? "REC → " + st.log.split("\\").pop() : "";
+  if (st.trigger) {
+    const m = S.meta[st.trigger.key] || {aid: st.trigger.key & 0x1FFFFFFF, ext: st.trigger.key >= 0x20000000};
+    $("trigState").textContent = (st.trigger.collecting ? "nagrywam… " : "uzbrojony ") +
+      "0x" + idHex(m.aid, m.ext) + "·b" + st.trigger.byte;
+  } else {
+    $("trigState").textContent = "";
+  }
+  if (st.version) $("ver").textContent = "v" + st.version;
+  $("profName").textContent = (st.profile || "brak").replace(/\.json$/i, "");
+  $("profMeta").textContent = "anotacje: " + (st.ann ?? 0);
+  updateConn();
+}
+
+/* ---------- zamiana ramek na wiersze ---------- */
+function matchesFilter(aid, name) {
+  if (!S.filter) return true;
+  const idh = idHex(aid, false).toLowerCase();
+  const nm = (name || "").toLowerCase();
+  return S.filter.split(/[\s,]+/).filter(Boolean).every(tok => {
+    const t = tok.replace(/^0x/, "");
+    return idh.includes(t) || nm.includes(tok);
+  });
+}
+function rowVisible(aid, name) {
+  return !S.hideSet.has(aid) && matchesFilter(aid, name);
+}
+function applyRowFilter(tr) {
+  const raw = parseInt(tr.dataset.aid, 10);
+  const aid = raw >= 0x20000000 ? raw - 0x20000000 : raw;
+  const name = tr.dataset.name || "";
+  tr.classList.toggle("fhidden", !rowVisible(aid, name));
+}
+function refilterAll() {
+  document.querySelectorAll("#rows tr").forEach(applyRowFilter);
+}
+function bytesCells(bytes, prev) {
+  return bytes.map((b, i) =>
+    `<span class="byte${prev && prev[i] !== b ? " chg" : ""}">${b}</span>`).join(" ");
+}
+function appendFrames(frames) {
+  if (S.paused) { S.pausedBuf += frames.length; return; }
+  for (const f of frames) {
+    if (S.t0 === null) S.t0 = f.t;
+    const fk = f.k !== undefined ? f.k : (f.x ? f.id + 0x20000000 : f.id);
+    const name = f.n || S.names[f.id] || "";
+    S.meta[fk] = {aid: f.id, ext: !!f.x};
+    S.idCount[fk] = (S.idCount[fk] || 0) + 1;
+    const bytes = f.d.match(/../g) || [];
+    feedTraces(fk, bytes, f.sig);
+    if (S.view === "grouped") updateGroupedRow(f, fk, name, bytes);
+    else addStreamRow(f, fk, name, bytes);
+    S.lastBytes[fk] = bytes;
+    S.lastT[fk] = f.t;
+  }
+  const wrap = $("trace");
+  if (S.view === "stream" && wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 80) wrap.scrollTop = wrap.scrollHeight;
+  $("emptyMsg").style.display = $("rows").children.length ? "none" : "";
+  $("fBuf").textContent = S.view === "grouped" ? $("rows").children.length : S.rowCount();
+  $("fState").textContent = S.paused ? "PAUZA" : (S.connected ? "ONLINE" : "OFFLINE");
+}
+S.rowCount = () => $("rows").children.length;
+function addStreamRow(f, fk, name, bytes) {
+  const prev = S.lastBytes[fk];
+  const per = S.stats[fk] && S.stats[fk].p;
+  const tr = document.createElement("tr");
+  tr.dataset.aid = fk;
+  tr.dataset.name = name;
+  tr.innerHTML = `<td class="tm">${(f.t - S.t0).toFixed(3)}</td>`
+    + `<td><span class="idchip${f.x ? " ext" : ""}" style="color:${idColor(f.id)};background:${idColor(f.id)}1c">${idHex(f.id, f.x)}</span></td>`
+    + `<td class="nm">${name}</td><td>${S.idCount[fk]}</td>`
+    + `<td>${bytesCells(bytes, prev)}</td><td class="freq">${per ? (per*1000).toFixed(1)+" ms" : ""}</td>`;
+  tr.onclick = () => selectId(fk);
+  tr.querySelector(".idchip").ondblclick = ev => {
+    ev.stopPropagation();
+    const h = "0x" + idHex(f.id, f.x);
+    navigator.clipboard.writeText(h).then(() => toast("Skopiowano " + h));
+  };
+  $("rows").appendChild(tr);
+  applyRowFilter(tr);
+  while ($("rows").children.length > 500) $("rows").removeChild($("rows").firstChild);
+  pushHist(fk, bytes);
+}
+function ensureGroupRow(fk) {
+  if (S.groupRows[fk]) return S.groupRows[fk];
+  const m = S.meta[fk] || {aid: fk & 0x1FFFFFFF, ext: fk >= 0x20000000};
+  const tr = document.createElement("tr");
+  tr.dataset.aid = fk;
+  tr.dataset.name = S.names[m.aid] || "";
+  tr.innerHTML = `<td class="tm"></td>`
+    + `<td><span class="idchip${m.ext ? " ext" : ""}" style="color:${idColor(m.aid)};background:${idColor(m.aid)}1c">${idHex(m.aid, m.ext)}</span></td>`
+    + `<td class="nm">${S.names[m.aid] || ""}</td><td class="cnt">0</td>`
+    + `<td>${""}</td><td class="freq"></td>`;
+  tr.onclick = () => selectId(fk);
+  tr.querySelector(".idchip").ondblclick = ev => {
+    ev.stopPropagation();
+    const h = "0x" + idHex(m.aid, m.ext);
+    navigator.clipboard.writeText(h).then(() => toast("Skopiowano " + h));
+  };
+  $("rows").appendChild(tr);
+  applyRowFilter(tr);
+  S.groupRows[fk] = tr;
+  return tr;
+}
+function updateGroupedRow(f, fk, name, bytes) {
+  const tr = ensureGroupRow(fk);
+  const prev = S.lastBytes[fk];
+  tr.children[0].textContent = (f.t - S.t0).toFixed(3);
+  tr.children[2].textContent = name;
+  tr.dataset.name = name;
+  applyRowFilter(tr);
+  tr.children[3].textContent = S.idCount[fk];
+  tr.children[4].innerHTML = bytesCells(bytes, prev);
+  const per = S.stats[fk] && S.stats[fk].p;
+  tr.children[5].textContent = per ? (per*1000).toFixed(1)+" ms" : "";
+  pushHist(fk, bytes);
+}
+function pushHist(aid, bytes) {
+  const hist = S.idHist[aid] || (S.idHist[aid] = []);
+  hist.push(bytes.map(h => parseInt(h, 16)));
+  if (hist.length > 400) hist.shift();
+  if (S.sel === aid && !S.drawing) { S.drawing = true; requestAnimationFrame(() => { S.drawing = false; drawScope(); }); }
+}
+function clearAll() {
+  $("rows").innerHTML = "";
+  S.idHist = {}; S.lastBytes = {}; S.lastT = {}; S.idCount = {}; S.groupRows = {}; S.meta = {}; S.t0 = null; S.pausedBuf = 0;
+  $("emptyMsg").style.display = "";
+  $("fBuf").textContent = 0;
+  drawScope();
+}
+function updateFreqCells() {
+  document.querySelectorAll("#rows tr").forEach(tr => {
+    const per = S.stats[tr.dataset.aid] && S.stats[tr.dataset.aid].p;
+    if (per) tr.lastElementChild.textContent = (per*1000).toFixed(1) + " ms";
+  });
+}
+
+/* ---------- ID insight ---------- */
+function selectId(key) {
+  S.sel = key;
+  switchTab("ins");
+  document.querySelectorAll("#rows tr.sel").forEach(r => r.classList.remove("sel"));
+  document.querySelectorAll(`#rows tr[data-aid="${key}"]`).forEach(r => r.classList.add("sel"));
+  const m = S.meta[key] || {aid: key & 0x1FFFFFFF, ext: key >= 0x20000000};
+  $("insId").textContent = "0x" + idHex(m.aid, m.ext);
+  $("insHint").style.display = "none";
+  refreshInsight(); drawScope();
+}
+async function refreshInsight() {
+  if (S.sel === null) return;
+  try { renderInsight(await api("/api/id/" + S.sel)); } catch (e) {}
+}
+function renderInsight(d) {
+  if (!d || d.key !== S.sel) return;
+  $("insId").textContent = "0x" + idHex(d.id, d.ext);
+  $("dockId").textContent = "0x" + idHex(d.id, d.ext) + " · " + (d.count ?? 0) + " ramek";
+  $("dockEmpty").style.display = "none";
+  $("insCount").textContent = d.count ?? 0;
+  $("insPeriod").textContent = d.period ? (d.period*1000).toFixed(1) + " ms" : "—";
+  $("insLast").textContent = d.last || "—";
+  if (document.activeElement !== $("annName")) $("annName").value = (d.ann && d.ann.name) || "";
+  if (document.activeElement !== $("annNote")) $("annNote").value = (d.ann && d.ann.note) || "";
+  $("cardCls").style.display = "";
+  const cls = $("insClasses"); cls.innerHTML = "";
+  for (const c of (d.classes || [])) {
+    const div = document.createElement("div");
+    div.className = "cls";
+    const k2 = ["sensor","zmienny"].some(x => c.k.startsWith(x)) ? " k2" : "";
+    const sigs = (d.link && d.link.byte_sigs && d.link.byte_sigs[c.b]) || [];
+    const chips = sigs.length
+      ? `<span class="lnks">${sigs.map(s => `<span class="lnk" data-sig="${s}" title="sygnał DBC na tym bajcie — kliknij, aby podświetlić">${s}</span>`).join("")}</span>`
+      : "";
+    div.innerHTML = `<span class="b">b${c.b}</span><span class="k${k2}">${c.k}</span><span class="d">${c.d}</span>${chips}`;
+    cls.appendChild(div);
+  }
+  if (d.link && d.link.uncovered && d.link.uncovered.length) {
+    const hint = document.createElement("div");
+    hint.className = "hint2";
+    hint.style.padding = "2px 12px 6px";
+    hint.textContent = `poza DBC: ${d.link.uncovered.map(b => "b" + b).join(", ")} — kandydaci na sygnały (zobacz: autodbc)`;
+    cls.appendChild(hint);
+  }
+  if (!(d.classes && d.classes.length)) {
+    const ph = document.createElement("div");
+    ph.className = "hint2"; ph.style.padding = "4px 6px";
+    ph.textContent = "Za mało danych do klasyfikacji (min. ~12 ramek) — zbieraj dalej.";
+    cls.appendChild(ph);
+  }
+  $("cardSig").style.display = "";
+  const dec = $("insDecoded"); dec.innerHTML = "";
+  for (const [k, v] of Object.entries(d.decoded || {})) {
+    const div = document.createElement("div");
+    div.className = "sig";
+    const pinned = traceIndex("sig", S.sel, k) >= 0;
+    const link = d.link ? (d.link.signals || []).find(s => s.name === k) : null;
+    let meta = `<span class="meta"></span>`;
+    if (link) {
+      const span = link.first === link.last ? `b${link.first}` : `b${link.first}-${link.last}`;
+      const clsTxt = link.cls && link.cls.length ? " · " + link.cls.join("/") : "";
+      const warnTxt = link.warn && link.warn.length
+        ? ` <span class="warnlbl" title="sygnał obejmuje licznik/sumę — wartość może skakać">⚠ ${link.warn.join("/")}</span>` : "";
+      meta = `<span class="meta" title="${span}${clsTxt}">${span}${clsTxt}${warnTxt}</span>`;
+    }
+    div.innerHTML = `<span class="lbl" title="${k}">${k}</span>${meta}<span class="val" title="${k} = ${v}">${v}</span>`;
+    const btn = document.createElement("button");
+    btn.className = "fchip";
+    btn.textContent = pinned ? "✓" : "＋";
+    btn.title = pinned ? "Usuń z wykresu (Signal Scope)" : "Dodaj do wykresu (Signal Scope)";
+    btn.onclick = ev => { ev.stopPropagation(); toggleSigTrace(S.sel, k); };
+    div.appendChild(btn);
+    dec.appendChild(div);
+  }
+  if (!Object.keys(d.decoded || {}).length) {
+    const ph = document.createElement("div");
+    ph.className = "hint2"; ph.style.padding = "4px 6px";
+    ph.textContent = S.dbc
+      ? "Brak dopasowania tego ID w bazie " + S.dbc + "."
+      : "Nie wczytano bazy DBC — wybierz plik na górnej belce (lista DBC).";
+    dec.appendChild(ph);
+  }
+  renderByteButtons(d.dlc);
+  fillTrigBytes(d.dlc);
+}
+function fillTrigBytes(dlc) {
+  const tb = $("trigByte");
+  if (!dlc || tb.children.length === dlc) return;
+  const cur = tb.value;
+  tb.innerHTML = "";
+  for (let i = 0; i < dlc; i++) {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = "b" + i;
+    tb.appendChild(o);
+  }
+  if (cur && parseInt(cur, 10) < dlc) tb.value = cur;
+}
+function renderByteButtons(dlc) {
+  const bb = $("byteBtns");
+  if (!dlc || bb.children.length === dlc) return;
+  bb.innerHTML = "";
+  for (let i = 0; i < dlc; i++) {
+    const b = document.createElement("button");
+    b.className = "fchip"; b.textContent = "b" + i;
+    b.onclick = () => toggleByteTrace(S.sel, i);
+    bb.appendChild(b);
+  }
+  if (S.byteSel >= dlc) S.byteSel = dlc - 1;
+  markByteBtns();
+}
+function markByteBtns() {
+  [...$("byteBtns").children].forEach((b, i) =>
+    b.classList.toggle("on", S.sel !== null && traceIndex("byte", S.sel, i) >= 0));
+}
+function autoByte() {
+  const hist = S.idHist[S.sel] || [];
+  if (hist.length < 10) { toast("Za mało danych na auto-wybór", "warn"); return; }
+  const dlc = hist[hist.length-1].length;
+  let best = 0, bestScore = -1;
+  for (let i = 0; i < dlc; i++) {
+    let ch = 0;
+    for (let k = 1; k < hist.length; k++) if (hist[k-1][i] !== hist[k][i]) ch++;
+    if (ch > bestScore) { bestScore = ch; best = i; }
+  }
+  if (traceIndex("byte", S.sel, best) < 0) toggleByteTrace(S.sel, best);
+  toast(`auto → b${best} (${bestScore} zmian) przypięty do wykresu`);
+}
+setInterval(() => { if (S.sel !== null && !S.paused) refreshInsight(); }, 2000);
+$("insClasses").addEventListener("click", e => {
+  const el = e.target.closest(".lnk");
+  if (!el) return;
+  const name = el.dataset.sig;
+  let found = null;
+  for (const row of $("insDecoded").children) {
+    const l = row.querySelector(".lbl");
+    if (l && l.textContent === name) { found = row; break; }
+  }
+  if (found) {
+    found.classList.add("flash");
+    setTimeout(() => found.classList.remove("flash"), 1300);
+    found.scrollIntoView({ block: "nearest" });
+  } else {
+    toast("Sygnał " + name + " nie występuje w dekodowaniu tej ramki", "warn");
+  }
+});
+
+/* --- Anotacje (nazwy/notatki ID -> profil pojazdu) --- */
+async function loadProfiles() {
+  try {
+    const d = await api("/api/profiles");
+    const sel = $("profSel");
+    sel.innerHTML = (d.profiles || []).map(p =>
+      `<option value="${p.name}">${p.name} (${p.annotations})</option>`).join("");
+    if (d.active) {
+      const base = d.active.replace(/\.json$/i, "");
+      if ([...sel.options].some(o => o.value === base)) sel.value = base;
+    }
+  } catch (e) {}
+}
+$("profLoad").onclick = async () => {
+  const res = await post("/api/profile/load", {name: $("profSel").value});
+  if (!res.ok) { toast("Profil: " + (res.error || "błąd"), "warn"); return; }
+  toast(`Profil ${res.name}: ${Object.keys(res.annotations || {}).length} anotacji`, "ok");
+  loadProfiles(); refreshInsight(); refreshSession();
+};
+$("profRefresh").onclick = loadProfiles;
+async function refreshMcp() {
+  try {
+    const st = await api("/api/mcp");
+    $("mcpState").textContent = st.available
+      ? `gotowe (${st.tools} narzędzi) · ${st.cmd}`
+      : "brak pakietu mcp — py -m pip install mcp";
+    $("mcpCopy").dataset.cfg = JSON.stringify(st.config || {}, null, 2);
+  } catch (e) {}
+}
+$("mcpCopy").onclick = async () => {
+  const txt = $("mcpCopy").dataset.cfg || "";
+  if (!txt) { toast("Brak konfiguracji", "warn"); return; }
+  try { await navigator.clipboard.writeText(txt); toast("Konfiguracja MCP skopiowana", "ok"); }
+  catch (e) { toast("Nie udało się skopiować", "warn"); }
+};
+$("mcpRefresh").onclick = refreshMcp;
+async function saveAnnotation() {
+  if (S.sel === null) { toast("Najpierw wybierz ramkę", "warn"); return; }
+  const res = await post("/api/annotation", {key: S.sel,
+    name: $("annName").value, note: $("annNote").value});
+  if (!res.ok) { toast("Anotacja: " + (res.error || "błąd"), "warn"); return; }
+  const m = S.meta[S.sel] || {aid: S.sel & 0x1FFFFFFF};
+  if (res.name) S.names[m.aid] = res.name; else delete S.names[m.aid];
+  toast("Zapisano: 0x" + idHex(m.aid, S.sel >= 0x20000000)
+        + (res.name ? " — " + res.name : " (usunięto)"), "ok");
+  loadProfiles();
+}
+$("annSave").onclick = saveAnnotation;
+$("annName").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); $("annNote").focus(); } };
+$("annNote").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); saveAnnotation(); } };
+
+/* --- Menedżer logów (stats / trim / replay) --- */
+function setLtab(tab) {
+  document.querySelectorAll(".ltabs .fchip").forEach(b => b.classList.toggle("on", b.dataset.ltab === tab));
+  ["stats", "trim", "replay"].forEach(t => $("ltab-" + t).classList.toggle("hidden", t !== tab));
+}
+document.querySelectorAll(".ltabs .fchip").forEach(b => b.onclick = () => setLtab(b.dataset.ltab));
+$("lgStatsRun").onclick = async () => {
+  const res = await post("/api/log/stats", {file: $("lgStatsFile").value});
+  const box = $("lgStatsOut"); box.innerHTML = "";
+  if (!res.ok) { box.innerHTML = `<div class="merr">${res.error || "błąd"}</div>`; return; }
+  box.appendChild(udsCard(`<b>${res.file}</b> · ramek: <b>${res.frames}</b> · unikalnych ID: <b>${res.ids}</b> · czas: <b>${res.duration} s</b>`));
+  for (const t of res.top) {
+    box.appendChild(udsCard(`0x${t.id.toString(16).toUpperCase()}${t.ext ? " (29-bit)" : ""} · ${t.count} ramek`
+      + (t.period ? ` · ~${(t.period * 1000).toFixed(1)} ms` : "")));
+  }
+};
+$("lgTrimRun").onclick = async () => {
+  const res = await post("/api/log/trim", {file: $("lgTrimFile").value,
+    from_s: $("lgTrimFrom").value, to_s: $("lgTrimTo").value,
+    offset: $("lgTrimOff").value, count: $("lgTrimCnt").value});
+  const box = $("lgTrimOut"); box.innerHTML = "";
+  if (!res.ok) { box.innerHTML = `<div class="merr">${res.error || "błąd"}</div>`; return; }
+  box.appendChild(udsCard(`Zapisano <b>${res.file}</b> — ${res.frames} ramek (z ${res.name})`));
+  toast("Przycięto → " + res.file, "ok");
+};
+$("lgAddSet").onclick = () => $("lgSetRows").appendChild(ruleRow("set"));
+$("lgAddCnt").onclick = () => $("lgCntRows").appendChild(ruleRow("cnt"));
+$("lgAddChk").onclick = () => $("lgChkRows").appendChild(ruleRow("chk"));
+$("lgFillDemo").onclick = () => {
+  $("lgSetRows").innerHTML = ""; $("lgCntRows").innerHTML = ""; $("lgChkRows").innerHTML = "";
+  $("lgSetRows").appendChild(ruleRow("set", {id: "0x130", byte: 3, value: "0x2A"}));
+  $("lgCntRows").appendChild(ruleRow("cnt", {id: "0x130", byte: 1}));
+  $("lgChkRows").appendChild(ruleRow("chk", {id: "0x130", byte: 7, algo: "xor8"}));
+  toast("Wypełniono reguły demo");
+};
+$("lgRepStart").onclick = async () => {
+  const demo = !!(S.cfg && S.cfg.demo);
+  if (!demo && !$("lgConfirm").checked) { toast("Zaznacz „potwierdzam wysyłkę na magistralę”", "warn"); return; }
+  const res = await post("/api/log/replay/start", {
+    file: $("lgRepFile").value, rate: parseFloat($("lgRepRate").value) || 1,
+    loop: $("lgRepLoop").checked, limit: parseInt($("lgRepLimit").value, 10) || 0,
+    rules: collectLgRules()});
+  if (!res.ok) { toast("Replay: " + (res.error || "błąd"), "warn"); return; }
+  lgLine(`start: ${res.file} (${res.total} ramek)`);
+  toast(`Replay: ${res.total} ramek`, "ok");
+  refreshLgState();
+};
+$("lgRepStop").onclick = async () => { await post("/api/log/replay/stop"); toast("Replay STOP"); refreshLgState(); };
+async function refreshLgState() {
+  try {
+    const st = await api("/api/status");
+    const r = st.replay || {};
+    $("lgRepState").textContent = r.active
+      ? `aktywne · ${r.sent || 0}/${r.total || 0} · ${r.file || ""}` : "nieaktywne";
+  } catch (e) {}
+}
+function lgLine(text) {
+  const box = $("lgLog");
+  if (!box) return;
+  const div = document.createElement("div");
+  div.textContent = text;
+  box.appendChild(div);
+  while (box.children.length > 300) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ---------- scope: wiele sygnałów ---------- */
+const cv = $("scope"), ctx = cv.getContext("2d");
+const TRACE_COLORS = ["#ffb300", "#5fa8ff", "#b78cff", "#59d98f", "#ff7a7a", "#6fe3ff"];
+
+function traceIndex(kind, key, key2) {
+  return S.traces.findIndex(t => t.kind === kind && t.key === key &&
+    (kind === "byte" ? t.byte === key2 : t.signal === key2));
+}
+function _traceMeta(key) {
+  return S.meta[key] || {aid: key & 0x1FFFFFFF, ext: key >= 0x20000000};
+}
+function toggleByteTrace(key, byte) {
+  const idx = traceIndex("byte", key, byte);
+  if (idx >= 0) S.traces.splice(idx, 1);
+  else {
+    if (S.traces.length >= 6) { toast("Limit 6 wykresów — usuń któryś (✕ w legendzie)", "warn"); return; }
+    const m = _traceMeta(key);
+    S.traces.push({kind: "byte", key, aid: m.aid, ext: m.ext, byte,
+                   label: `0x${idHex(m.aid, m.ext)}·b${byte}`,
+                   color: TRACE_COLORS[S.traces.length % TRACE_COLORS.length], data: []});
+  }
+  syncPins(); renderLegend(); drawScope(); markByteBtns();
+}
+function toggleSigTrace(key, name) {
+  const idx = traceIndex("sig", key, name);
+  if (idx >= 0) S.traces.splice(idx, 1);
+  else {
+    if (S.traces.length >= 6) { toast("Limit 6 wykresów — usuń któryś (✕ w legendzie)", "warn"); return; }
+    const m = _traceMeta(key);
+    S.traces.push({kind: "sig", key, aid: m.aid, ext: m.ext, signal: name, label: name,
+                   color: TRACE_COLORS[S.traces.length % TRACE_COLORS.length], data: []});
+  }
+  syncPins(); renderLegend(); drawScope();
+  S.sel = key; refreshInsight();
+}
+function syncPins() {
+  const pins = S.traces.filter(t => t.kind === "sig")
+    .map(t => ({id: "0x" + idHex(t.aid, false), ext: !!t.ext, signal: t.signal}));
+  post("/api/pins", {pins}).catch(() => {});
+}
+function renderLegend() {
+  const box = $("traceLegend");
+  box.innerHTML = "";
+  $("scopePanel").classList.toggle("hidden", S.traces.length === 0);
+  for (const tr of S.traces) {
+    const div = document.createElement("span");
+    div.className = "tl";
+    const last = tr.data.length ? (Math.round(tr.data[tr.data.length - 1] * 100) / 100) : "—";
+    div.innerHTML = `<i style="background:${tr.color}"></i>${tr.label} <b>${last}</b> <span class="x">✕</span>`;
+    div.querySelector(".x").onclick = () => {
+      const i = S.traces.indexOf(tr);
+      if (i >= 0) S.traces.splice(i, 1);
+      syncPins(); renderLegend(); drawScope(); markByteBtns(); refreshInsight();
+    };
+    box.appendChild(div);
+  }
+}
+function updateLegendValues() {
+  const box = $("traceLegend");
+  [...box.children].forEach((span, i) => {
+    const tr = S.traces[i];
+    if (!tr) return;
+    const last = tr.data.length ? (Math.round(tr.data[tr.data.length - 1] * 100) / 100) : "—";
+    const b = span.querySelector("b");
+    if (b) b.textContent = last;
+  });
+}
+function feedTraces(key, bytes, sig) {
+  if (!S.traces.length) return;
+  let dirty = false;
+  for (const tr of S.traces) {
+    if (tr.kind === "byte" && tr.key === key) {
+      const v = bytes[tr.byte] !== undefined ? parseInt(bytes[tr.byte], 16) : null;
+      if (v !== null) { tr.data.push(v); if (tr.data.length > 400) tr.data.shift(); dirty = true; }
+    } else if (tr.kind === "sig" && tr.key === key && sig && tr.signal in sig) {
+      const v = sig[tr.signal];
+      if (typeof v === "number") { tr.data.push(v); if (tr.data.length > 400) tr.data.shift(); dirty = true; }
+    }
+  }
+  if (dirty) {
+    updateLegendValues();
+    if (!S.drawing) { S.drawing = true; requestAnimationFrame(() => { S.drawing = false; drawScope(); }); }
+  }
+}
+function drawScope() {
+  const w = cv.width = cv.clientWidth * devicePixelRatio;
+  const h = cv.height = cv.clientHeight * devicePixelRatio;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += w/12) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for (let y = h; y > 0; y -= h/4) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  if (!S.traces.length) return;
+  const pad = 10 * devicePixelRatio;
+  const n = 240;
+  for (const tr of S.traces) {
+    const vals = tr.data.slice(-n);
+    if (vals.length < 2) continue;
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (hi === lo) { hi += 1; lo -= 1; }
+    ctx.beginPath(); ctx.strokeStyle = tr.color; ctx.lineWidth = 1.5 * devicePixelRatio;
+    for (let i = 0; i < vals.length; i++) {
+      const x = i / (vals.length - 1) * w;
+      const y = h - pad - ((vals[i] - lo) / (hi - lo)) * (h - 2 * pad);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+  }
+}
+
+/* ---------- zakładki / widok / zaawansowane ---------- */
+function switchTab(name) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll(".tabpane").forEach(p => p.classList.toggle("on", p.id === "tab-" + name));
+  requestAnimationFrame(() => drawScope());
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+function setView(mode) {
+  S.view = mode;
+  $("viewStream").classList.toggle("on", mode === "stream");
+  $("viewGrouped").classList.toggle("on", mode === "grouped");
+  $("rows").innerHTML = ""; S.groupRows = {};
+  drawScope();
+}
+$("viewStream").onclick = () => setView("stream");
+$("viewGrouped").onclick = () => setView("grouped");
+function setTxAdv(on) {
+  S.txAdv = on;
+  $("txAdvanced").classList.toggle("hidden", !on);
+  $("txAdvBtn").textContent = on ? "▾ zaawansowane" : "▸ zaawansowane";
+}
+$("txAdvBtn").onclick = () => setTxAdv(!S.txAdv);
+
+/* ---------- przyciski ---------- */
+$("runBtn").onclick = () => {
+  S.paused = !S.paused;
+  $("runBtn").textContent = S.paused ? "▶ WZNÓW" : "⏸ PAUZA";
+  if (S.paused) toast("Podgląd wstrzymany — SPACJA lub przycisk wznawia", "warn");
+  if (!S.paused && S.pausedBuf) { toast(`Wznowiono (pominięto ${S.pausedBuf} ramek)`); S.pausedBuf = 0; }
+  updateConn();
+};
+$("recBtn").onclick = async () => {
+  if (S.recordingUi) {
+    await post("/api/record/stop");
+    S.recordingUi = false;
+    toast("REC zatrzymany — analiza: ▤ Analiza logów", "ok");
+  } else {
+    const res = await post("/api/record/start");
+    if (!res.ok) { toast("REC: " + (res.error||"błąd"), "warn"); return; }
+    S.recordingUi = true;
+    toast("REC → " + (res.name||""), "ok");
+  }
+  refreshSession();
+};
+async function refreshSession() { applyStatus(await api("/api/status")); }
+$("markBtn").onclick = async () => {
+  const label = prompt("Etykieta znacznika (np. 'przycisk szyby'):", "");
+  if (label === null) return;
+  const res = await post("/api/mark", {label});
+  if (res.saved) S.marks++;
+  $("sesMarks").textContent = S.marks;
+  toast(res.saved ? "MARK: " + label : "MARK bez REC (nie zapisano)", res.saved ? "ok" : "warn");
+};
+$("connectBtn").onclick = () => S.connected ? disconnect() : connect();
+$("portsRefresh").onclick = () => loadPorts();
+$("gearBtn").onclick = () => $("connDetails").classList.toggle("hidden");
+$("clearBtn").onclick = () => clearAll();
+$("filterInp").oninput = e => { S.filter = e.target.value.trim().toLowerCase(); refilterAll(); };
+$("ifaceSel").onchange = () => {
+  const v = $("ifaceSel").value === "virtual";
+  $("portSel").style.display = v ? "none" : "";
+  $("portsRefresh").style.display = v ? "none" : "";
+  $("silentWrap").style.display = v ? "none" : "";
+  $("demoWrap").style.display = v ? "" : "none";
+  if (v) $("connDetails").classList.remove("hidden");
+  updatePortHint();
+};
+$("autoByteBtn").onclick = () => autoByte();
+$("trigArm").onclick = async () => {
+  if (S.sel === null) { toast("Najpierw wybierz ramkę (ID)", "warn"); return; }
+  const st = await api("/api/status");
+  if (st.trigger) {
+    await post("/api/trigger/disarm");
+    toast("Trigger rozbrojony");
+    refreshSession();
+    return;
+  }
+  const byte = parseInt($("trigByte").value || "0", 10);
+  const res = await post("/api/trigger/arm", {key: S.sel, byte,
+    pre: parseFloat($("trigPre").value) || 5,
+    post: parseFloat($("trigPost").value) || 5,
+    keep: $("trigKeep").checked});
+  if (!res.ok) { toast(res.error || "błąd", "warn"); return; }
+  toast(`Trigger uzbrojony — zapiszę -${res.pre} +${res.post} s od zmiany`
+        + (res.keep ? " (ciągły)" : ""), "ok");
+  refreshSession();
+};
+$("expCsv").onclick = () => {
+  if (!S.traces.length) { toast("Brak wykresów do eksportu", "warn"); return; }
+  const n = Math.min(2000, Math.max(...S.traces.map(t => t.data.length)));
+  let csv = "idx," + S.traces.map(t => `"${t.label}"`).join(",") + "\n";
+  for (let i = 0; i < n; i++) {
+    csv += i + "," + S.traces.map(t => {
+      const off = t.data.length - n + i;
+      return off >= 0 && t.data[off] !== undefined ? t.data[off] : "";
+    }).join(",") + "\n";
+  }
+  const blob = new Blob([csv], {type: "text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "canstudio_wykresy.csv";
+  a.click();
+  toast("Zapisano CSV", "ok");
+};
+$("expPng").onclick = () => {
+  cv.toBlob(b => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b);
+    a.download = "canstudio_wykres.png";
+    a.click();
+    toast("Zapisano PNG", "ok");
+  });
+};
+$("dbcSel").onchange = async () => {
+  const path = $("dbcSel").value;
+  if (!path) return;
+  const res = await post("/api/dbc/load", {path});
+  if (!res.ok) { toast("DBC: " + (res.error||"błąd"), "warn"); return; }
+  S.names = await api("/api/names");
+  LSset("miriCAN_dbc", path);
+  toast(`DBC: ${res.name} (${res.messages} wiadomości)`, "ok");
+  refreshSession();
+};
+$("txSendBtn").onclick = async () => {
+  if (!$("txArm").checked) { toast("Zaznacz „TX UZBROJONY", "warn"); return; }
+  const payload = {
+    id: $("txId").value.trim(), data: $("txData").value.trim(),
+    count: parseInt($("txCount").value || "1", 10),
+    interval: (parseFloat($("txInterval").value || "100") / 1000),
+    sweep: $("txSweep").value.trim(), counter: $("txCounter").value.trim(),
+    checksum: $("txChecksum").value.trim(), extended: $("txExt").checked,
+  };
+  const res = await post("/api/send", payload);
+  if (!res.ok) { toast("TX: " + (res.error||"błąd"), "warn"); txline("TX błąd: " + (res.error||""), "notice"); return; }
+  switchTab("tx");
+  toast("TX start: " + res.label, "ok");
+};
+$("txStopBtn").onclick = async () => { await post("/api/send/stop"); toast("TX STOP"); };
+function hideId(aid) {
+  S.hideSet.add(aid); renderHideChips();
+  document.querySelectorAll(`#rows tr[data-aid="${aid}"]`).forEach(r => r.remove());
+}
+function renderHideChips() {
+  const box = $("hideChips"); box.innerHTML = "";
+  for (const key of S.hideSet) {
+    const m = _traceMeta(key);
+    const chip = document.createElement("span");
+    chip.className = "hidechip";
+    chip.textContent = "✕ " + idHex(m.aid, m.ext);
+    chip.title = "kliknij, aby pokazać ponownie";
+    chip.onclick = () => { S.hideSet.delete(key); renderHideChips(); };
+    box.appendChild(chip);
+  }
+}
+document.querySelectorAll(".themes .chip").forEach(ch => ch.onclick = () => {
+  document.documentElement.dataset.theme = ch.dataset.t;
+  document.querySelectorAll(".themes .chip").forEach(c => c.classList.toggle("active", c === ch));
+  drawScope();
+});
+addEventListener("keydown", e => {
+  const tag = (e.target.tagName || "").toUpperCase();
+  if (e.key === "Escape" && !$("overlay").classList.contains("hidden")) { closeModal(); return; }
+  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || tag === "BUTTON") return;
+  if (!$("overlay").classList.contains("hidden")) return;
+  if (e.code === "Space") { e.preventDefault(); $("runBtn").click(); }
+  if (e.key === "r" || e.key === "R") $("recBtn").click();
+  if (e.key === "m" || e.key === "M") $("markBtn").click();
+});
+addEventListener("resize", () => drawScope());
+
+/* ---------- modal: Analiza / MITM ---------- */
+let mitmPoll = null;
+let lgPoll = null;
+let obdPoll = null;
+function openModal(kind, tab) {
+  $("overlay").classList.remove("hidden");
+  $("mAnalyze").classList.toggle("hidden", kind !== "an");
+  $("mMitm").classList.toggle("hidden", kind !== "mitm");
+  $("mBtn").classList.toggle("hidden", kind !== "btn");
+  $("mUds").classList.toggle("hidden", kind !== "uds");
+  $("mLog").classList.toggle("hidden", kind !== "log");
+  $("mObd").classList.toggle("hidden", kind !== "obd");
+  $("mLogger").classList.toggle("hidden", kind !== "logger");
+  const __m = document.querySelector("#overlay .modal");
+  if (__m) {
+    if (kind === "obd") { obdApplyGeo(); }
+    else { __m.classList.remove("floating"); __m.style.width = __m.style.height = __m.style.left = __m.style.top = ""; }
+  }
+  if (obdGrip) obdGrip.style.display = kind === "obd" ? "" : "none";
+  $("mTitle").textContent = ({an: "Analiza logów", mitm: "Man in the middle (BENCH)",
+    btn: "Sniffer", uds: "Diagnostyka (UDS)", log: "Menedżer logów",
+    obd: "Diagnostyka OBD (vLinker)", logger: "Logger OBD — ustawienia / dane / analiza"})[kind] || kind;
+  if (mitmPoll) { clearInterval(mitmPoll); mitmPoll = null; }
+  if (lgPoll) { clearInterval(lgPoll); lgPoll = null; }
+  if (obdPoll) { clearInterval(obdPoll); obdPoll = null; }
+  if (kind === "an") { setMtab(tab || "quick"); loadLogs(); }
+  else if (kind === "mitm") { refreshMitm(); mitmPoll = setInterval(refreshMitm, 1200); }
+  else if (kind === "btn") { loadLogs(); refreshSession(); }
+  else if (kind === "log") { loadLogs(); refreshLgState(); lgPoll = setInterval(refreshLgState, 1500); }
+  else if (kind === "obd") { refreshObdStatus(); loadObdPidPicker(); obdPoll = setInterval(refreshObdStatus, 2500); }
+  else if (kind === "logger") { loadLoggerCfg(); loadObdDataList(); }
+}
+function closeModal() {
+  $("overlay").classList.add("hidden");
+  if (mitmPoll) { clearInterval(mitmPoll); mitmPoll = null; }
+  if (lgPoll) { clearInterval(lgPoll); lgPoll = null; }
+  if (obdPoll) { clearInterval(obdPoll); obdPoll = null; }
+}
+$("mClose").onclick = closeModal;
+$("overlay").onclick = e => { if (e.target === $("overlay")) closeModal(); };
+$("navAnalyze").onclick = () => openModal("an", "quick");
+$("navDiff").onclick = () => openModal("an", "diff");
+$("navChecksum").onclick = () => openModal("an", "quick");
+$("navMarkers").onclick = () => openModal("an", "markers");
+$("navMitm").onclick = () => openModal("mitm");
+$("navButton").onclick = () => openModal("btn");
+$("navUds").onclick = () => openModal("uds");
+$("navObd").onclick = () => openModal("obd");
+$("navLogger").onclick = () => openModal("logger");
+$("navLog").onclick = () => openModal("log");
+$("navSignals").onclick = () => {
+  switchTab("ins");
+  toast("Wczytaj DBC i kliknij ramkę — sygnały przypniesz do wykresu przyciskiem ＋");
+};
+
+function setMtab(tab) {
+  document.querySelectorAll(".mtabs .fchip").forEach(b => b.classList.toggle("on", b.dataset.mtab === tab));
+  ["quick", "diff", "markers"].forEach(t => $("mtab-" + t).classList.toggle("hidden", t !== tab));
+}
+document.querySelectorAll(".mtabs .fchip").forEach(b => b.onclick = () => setMtab(b.dataset.mtab));
+
+function clsLine(b, k, d, dim) {
+  return `<div class="cls${dim ? " dim" : ""}"><span class="b">${b}</span><span class="k">${k}</span><span class="d">${d}</span></div>`;
+}
+
+async function loadLogs() {
+  try {
+    const data = await api("/api/logs");
+    const opts = (data.logs || []).map(l =>
+      `<option value="${l.path}">${l.name} · ${(l.size/1024).toFixed(1)} kB${l.markers ? " · ✦" + l.markers : ""}</option>`).join("");
+    for (const id of ["anFile", "dfA", "dfB", "mkFile", "btnFile",
+                      "lgStatsFile", "lgTrimFile", "lgRepFile"]) {
+      const sel = $(id);
+      const keep = sel.value;
+      sel.innerHTML = `<option value="">— wybierz log —</option>` + opts;
+      sel.value = keep && [...sel.options].some(o => o.value === keep) ? keep : "";
+      const pr = sel.dataset.prefer;
+      if (pr) {
+        const cand = [...sel.options].find(o => o.value.endsWith(pr));
+        if (cand) sel.value = cand.value;
+        delete sel.dataset.prefer;
+      }
+    }
+    const preferred = (data.last_rec || "").split("\\").pop();
+    if (preferred && !$("anFile").value) {
+      const cand = [...$("anFile").options].find(o => o.value.endsWith(preferred));
+      if (cand) { $("anFile").value = cand.value; $("mkFile").value = cand.value; }
+    }
+  } catch (e) {}
+}
+$("anRefresh").onclick = loadLogs;
+
+async function runQuick() {
+  const file = $("anFile").value;
+  if (!file) { toast("Wybierz plik logu", "warn"); return; }
+  $("anStatus").textContent = "analizuję…";
+  const res = await post("/api/analyze/quick", {file, top: 8});
+  $("anStatus").textContent = "";
+  if (!res.ok) { $("anResults").innerHTML = `<div class="merr">${res.error}</div>`; return; }
+  let html = `<div class="mmeta">${res.file} · ${res.frames} ramek` +
+    `${res.markers ? " · ✦ " + res.markers + " znaczników" : ""}</div>`;
+  for (const it of res.ids) {
+    html += `<div class="mcard"><div class="mcardh">0x${idHex(it.id,false)} · ${it.count} ramek · ` +
+      `${it.period ? (it.period*1000).toFixed(1) + " ms" : "—"} · dlc ${it.dlc}</div>`;
+    for (const c of it.classes) html += clsLine("b" + c.b, c.k, c.d, false);
+    for (const h of it.checksums) html += clsLine(h.b < 0 ? "∑" : "b" + h.b, "SUMA", `${h.algo} (${(h.score*100).toFixed(1)}%)`, false);
+    for (const h of it.weak) html += clsLine(h.b < 0 ? "∑" : "b" + h.b, "słabe?", `${h.algo} (${(h.score*100).toFixed(0)}%)`, true);
+    html += `</div>`;
+  }
+  $("anResults").innerHTML = html || `<div class="mmeta">Brak danych.</div>`;
+}
+$("anRun").onclick = runQuick;
+$("anAutodbc").onclick = async () => {
+  const f = $("anFile").value;
+  if (!f) { toast("Wybierz log", "warn"); return; }
+  const res = await post("/api/analyze/autodbc", {file: f});
+  if (!res.ok) { toast("Auto-DBC: " + (res.error || "błąd"), "warn"); return; }
+  toast(`Auto-DBC: ${res.file} (${res.messages} wiad.)`, "ok");
+};
+
+async function runDiff() {
+  const a = $("dfA").value, b = $("dfB").value;
+  if (!a || !b) { toast("Wybierz oba logi", "warn"); return; }
+  const res = await post("/api/analyze/diff", {file_a: a, file_b: b});
+  if (!res.ok) { $("dfResults").innerHTML = `<div class="merr">${res.error}</div>`; return; }
+  let html = `<div class="mmeta">A: ${res.a} · B: ${res.b}</div>`;
+  if (!res.ids.length) html += `<div class="mmeta">Brak wspólnych ID ze zmianami.</div>`;
+  for (const d of res.ids) {
+    html += `<div class="mcard"><div class="mcardh">0x${idHex(d.id,false)} · ${d.n_a} vs ${d.n_b} ramek (score ${d.score})</div>`;
+    for (const bd of d.bytes) {
+      html += clsLine("b" + bd.byte, `${bd.mean_a} → ${bd.mean_b}`,
+        `A[${bd.a.join(",")}] B[${bd.b.join(",")}]${bd.note ? " · " + bd.note : ""}`, false);
+    }
+    html += `</div>`;
+  }
+  if (res.only_b.length)
+    html += `<div class="mcard"><div class="mcardh">tylko w B</div><div class="cls"><span class="d">` +
+      res.only_b.map(x => `0x${idHex(x.id,false)} x${x.n}`).join(" · ") + `</span></div></div>`;
+  if (res.only_a.length)
+    html += `<div class="mcard"><div class="mcardh">tylko w A</div><div class="cls"><span class="d">` +
+      res.only_a.map(x => `0x${idHex(x.id,false)} x${x.n}`).join(" · ") + `</span></div></div>`;
+  $("dfResults").innerHTML = html;
+}
+$("dfRun").onclick = runDiff;
+
+async function runMarkers() {
+  const file = $("mkFile").value;
+  if (!file) { toast("Wybierz plik logu", "warn"); return; }
+  const res = await post("/api/analyze/correlate", {file});
+  if (!res.ok) { $("mkResults").innerHTML = `<div class="merr">${res.error}</div>`; return; }
+  let html = `<div class="mmeta">${res.file} · ${res.marks} znaczników</div>`;
+  for (const lb of res.labels) {
+    html += `<div class="mcard"><div class="mcardh">„${lb.label}” · powtórzeń: ${lb.count}</div>`;
+    if (!lb.hits.length) html += `<div class="mmeta">brak kandydatów</div>`;
+    for (const h of lb.hits) {
+      html += clsLine("0x" + idHex(h.id,false), "bajt " + h.byte,
+        `trafienia ${h.hits}/${h.total} (${(100*h.hits/h.total).toFixed(0)}%) · tło ~${(h.baseline*100).toFixed(0)}%`, false);
+    }
+    html += `</div>`;
+  }
+  $("mkResults").innerHTML = html;
+}
+$("mkRun").onclick = runMarkers;
+
+/* --- MITM --- */
+const FALLBACK_ALGOS = ["xor8", "xor8 ^ FF", "sum8", "sum8 ^ FF"];
+function ruleRow(kind, vals = {}) {
+  const div = document.createElement("div");
+  div.className = "rrow";
+  const algos = (S.algos && S.algos.length ? S.algos : FALLBACK_ALGOS);
+  if (kind === "set") {
+    div.innerHTML = `<span class="lbl">ustaw</span> <input class="inp ri" placeholder="0x130" value="${vals.id||""}" style="width:70px">` +
+      `<span class="lbl">b</span><input class="inp rb" placeholder="3" value="${vals.byte??""}" style="width:38px">` +
+      `<span class="lbl">=</span><input class="inp rv" placeholder="0x2A" value="${vals.value||""}" style="width:58px">`;
+  } else if (kind === "cnt") {
+    div.innerHTML = `<span class="lbl">licznik</span> <input class="inp ri" placeholder="0x130" value="${vals.id||""}" style="width:70px">` +
+      `<span class="lbl">b</span><input class="inp rb" placeholder="1" value="${vals.byte??""}" style="width:38px">`;
+  } else {
+    div.innerHTML = `<span class="lbl">suma</span> <input class="inp ri" placeholder="0x130" value="${vals.id||""}" style="width:70px">` +
+      `<span class="lbl">b</span><input class="inp rb" placeholder="7" value="${vals.byte??""}" style="width:38px">` +
+      `<select class="inp ralgo">${algos.map(a => `<option>${a}</option>`).join("")}</select>`;
+    if (vals.algo) div.querySelector(".ralgo").value = vals.algo;
+  }
+  const del = document.createElement("button");
+  del.className = "fchip"; del.textContent = "✕";
+  del.onclick = () => div.remove();
+  div.appendChild(del);
+  return div;
+}
+$("miAddSet").onclick = () => $("miSetRows").appendChild(ruleRow("set"));
+$("miAddCnt").onclick = () => $("miCntRows").appendChild(ruleRow("cnt"));
+$("miAddChk").onclick = () => $("miChkRows").appendChild(ruleRow("chk"));
+
+$("miFillDemo").onclick = () => {
+  $("miDemo").checked = true;
+  $("miSetRows").innerHTML = ""; $("miCntRows").innerHTML = ""; $("miChkRows").innerHTML = "";
+  $("miSetRows").appendChild(ruleRow("set", {id:"0x130", byte:3, value:"0x2A"}));
+  $("miCntRows").appendChild(ruleRow("cnt", {id:"0x130", byte:1}));
+  $("miChkRows").appendChild(ruleRow("chk", {id:"0x130", byte:7, algo:"xor8"}));
+  toast("Wypełniono reguły demo — kliknij START MITM", "ok");
+};
+
+function collectRulesFrom(setRows, cntRows, chkRows, dropInp) {
+  const rules = {drop: [], set: [], counter: [], checksum: []};
+  const dropTxt = dropInp.value.trim();
+  if (dropTxt) rules.drop = dropTxt.split(",").map(s => s.trim()).filter(Boolean);
+  for (const row of setRows.children) {
+    const id = row.querySelector(".ri").value.trim(); if (!id) continue;
+    rules.set.push({id, byte: parseInt(row.querySelector(".rb").value || "0", 10),
+                    value: row.querySelector(".rv").value.trim() || "0"});
+  }
+  for (const row of cntRows.children) {
+    const id = row.querySelector(".ri").value.trim(); if (!id) continue;
+    rules.counter.push({id, byte: parseInt(row.querySelector(".rb").value || "0", 10)});
+  }
+  for (const row of chkRows.children) {
+    const id = row.querySelector(".ri").value.trim(); if (!id) continue;
+    rules.checksum.push({id, byte: parseInt(row.querySelector(".rb").value || "0", 10),
+                         algo: row.querySelector(".ralgo").value});
+  }
+  return rules;
+}
+function collectRules() {
+  return collectRulesFrom($("miSetRows"), $("miCntRows"), $("miChkRows"), $("miDrop"));
+}
+function collectLgRules() {
+  return collectRulesFrom($("lgSetRows"), $("lgCntRows"), $("lgChkRows"), $("lgDrop"));
+}
+
+$("miStart").onclick = async () => {
+  const demo = $("miDemo").checked;
+  if (!demo && !$("miConfirm").checked) { toast("Dla realnych portów zaznacz „potwierdzam BENCH”", "warn"); return; }
+  const payload = {in: $("miIn").value.trim(), out: $("miOut").value.trim(),
+                   demo, tap: $("miTap").checked, rules: collectRules()};
+  const res = await post("/api/mitm/start", payload);
+  if (!res.ok) { toast("MITM: " + (res.error||"błąd"), "warn"); return; }
+  toast("MITM start (" + (res.demo ? "demo" : res.in + " ↔ " + res.out) + ")", "ok");
+  refreshMitm();
+};
+$("miStop").onclick = async () => { await post("/api/mitm/stop"); toast("MITM STOP"); refreshMitm(); };
+
+async function refreshMitm() {
+  try {
+    const st = await api("/api/mitm/status");
+    const s = st.stats || {};
+    $("miStatus").textContent = st.active
+      ? `aktywne${st.demo ? " (demo)" : ""} · przekazano ${s.fwd||0} · zmodyfikowano ${s.mod||0} · pominięto ${s.dropped||0}`
+      : "nieaktywne";
+  } catch (e) {}
+}
+function mitmLine(text) {
+  const box = $("miLog");
+  if (!box || $("mMitm").classList.contains("hidden")) return;
+  const div = document.createElement("div");
+  div.textContent = text;
+  if (text.includes("✱")) div.className = "tx";
+  box.appendChild(div);
+  while (box.children.length > 300) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* --- Diagnostyka OBD (vLinker) --- */
+S.obdLive = {};
+function obdLine(text, cls = "") {
+  const box = $("obLogLines");
+  if (!box) return;
+  const div = document.createElement("div");
+  div.className = cls; div.textContent = text;
+  box.appendChild(div);
+  while (box.children.length > 300) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+function obdEv(ev) {
+  if (ev.e === "pid") {
+    S.obdLive[ev.pid] = {name: ev.name, value: ev.value, unit: ev.unit,
+                         status: ev.status, ts: Date.now()};
+    renderObdLive();
+  } else if (ev.e === "line") {
+    obdLine(ev.m);
+  } else if (ev.e === "state" || ev.e === "monitor") {
+    refreshObdStatus();
+  }
+}
+function renderObdLive() {
+  const box = $("obPidLive");
+  if (!box) return;
+  box.innerHTML = Object.keys(S.obdLive).sort().filter(pid => {
+    if (!obdHideRaw) return true;
+    const r = S.obdLive[pid];
+    return !(r.name === "PID_UNKNOWN" || !r.name || r.value == null);
+  }).map(pid => {
+    const r = S.obdLive[pid];
+    const val = r.status === "ok" ? `${r.value} ${r.unit}` : `— (${r.status})`;
+    return `<div class="mcard" style="padding:4px 10px"><span class="mcardh" style="margin:0">${pid}</span>` +
+           ` <b>${r.name}</b> · ${val}</div>`;
+  }).join("");
+}
+async function refreshObdStatus() {
+  try {
+    const st = await api("/api/obd/status");
+    const parts = [];
+    if (st.open) {
+      parts.push(st.port || "?");
+      if (st.adapter) parts.push(st.adapter);
+      if (st.voltage != null) parts.push(st.voltage + " V");
+      parts.push(st.bus ? "magistrala OK" : "brak magistrali (zapłon?)");
+    } else {
+      parts.push("nie połączono");
+    }
+    $("obState").textContent = parts.join(" · ");
+    const monActive = !!(st.monitor && st.monitor.active);
+    $("obMonState").textContent = monActive
+      ? `aktywne · ${(st.monitor.pids || []).join(", ")} · ${st.monitor.rounds} odczytów`
+      : "nieaktywne";
+    $("obMonStart").classList.toggle("run", monActive);
+    $("obMonStart").textContent = monActive ? "▶ Monitor (aktywny)" : "▶ Monitor";
+    $("obMonStop").disabled = !monActive;
+  } catch (e) {}
+}
+let obdPickerPids = null;
+let obdHideRaw = false;
+try { obdHideRaw = localStorage.getItem("miriCAN_obdHideRaw") === "1"; } catch (e) {}
+const OBD_BASIC = ["010C", "010D", "0105", "012F"];
+function pulse(el) { el.classList.add("pulse"); setTimeout(() => el.classList.remove("pulse"), 350); }
+function obdSel() {
+  return [...document.querySelectorAll("#obPidPick input:checked")].map(i => i.dataset.opid);
+}
+function obdSetSel(list) {
+  const set = new Set(list || []);
+  document.querySelectorAll("#obPidPick input").forEach(i => i.checked = set.has(i.dataset.opid));
+  obdSelChanged();
+}
+function obdSelChanged() {
+  const sel = obdSel();
+  $("obPidCount").textContent = sel.length ? `wybrano: ${sel.length}` : "brak wyboru — zaznacz PID-y";
+  if (obdPickerPids) {
+    $("obPidAll").classList.toggle("on", sel.length > 0 && sel.length === obdPickerPids.length);
+    $("obPidBasic").classList.toggle("on",
+      sel.length === OBD_BASIC.length && OBD_BASIC.every(p => sel.includes(p)));
+  }
+  try { localStorage.setItem("miriCAN_obdPids", JSON.stringify(sel)); } catch (e) {}
+}
+async function loadObdPidPicker(force) {
+  if (obdPickerPids && !force) return;
+  try {
+    const res = await api("/api/obd/pids");
+    obdPickerPids = res.pids || [];
+    const cur = obdSel();  // zachowaj zaznaczenia przy odświeżaniu
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem("miriCAN_obdPids") || "null"); } catch (e) {}
+    const preselect = cur.length ? cur : (Array.isArray(saved) && saved.length ? saved : OBD_BASIC);
+    $("obPidPick").innerHTML = obdPickerPids.filter(p => !obdHideRaw || p.name).map(p => {
+      const nm = p.name ? p.name : "(bez dekodera — surowe)";
+      const mk = p.sup === true ? " ✓" : "";
+      return `<label class="chk"><input type="checkbox" data-opid="${p.pid}"> ${p.pid} ${nm}${mk}</label>`;
+    }).join("");
+    document.querySelectorAll("#obPidPick input").forEach(i => i.addEventListener("change", obdSelChanged));
+    obdSetSel(preselect.filter(p => obdPickerPids.some(x => x.pid === p)));
+    $("obPidHideRaw").classList.toggle("on", obdHideRaw);
+    $("obPidAll").onclick = () => { pulse($("obPidAll")); obdSetSel(obdPickerPids.map(p => p.pid)); };
+    $("obPidBasic").onclick = () => { pulse($("obPidBasic")); obdSetSel(OBD_BASIC); };
+    $("obPidNone").onclick = () => { pulse($("obPidNone")); obdSetSel([]); };
+    $("obPidHideRaw").onclick = () => {
+      pulse($("obPidHideRaw"));
+      obdHideRaw = !obdHideRaw;
+      try { localStorage.setItem("miriCAN_obdHideRaw", obdHideRaw ? "1" : "0"); } catch (e) {}
+      $("obPidHideRaw").classList.toggle("on", obdHideRaw);
+      loadObdPidPicker(true);
+      renderObdLive();
+    };
+    $("obPidSup").textContent = res.supported != null ? `· auto wspiera: ${res.supported}` : "";
+  } catch (e) {}
+}
+
+/* --- Okno OBD: przesuwanie / rozmiar / zapamiętywanie --- */
+let obdGrip = null;
+function obdWinEl() { return document.querySelector("#overlay .modal"); }
+let obdGeo = null;
+try { obdGeo = JSON.parse(localStorage.getItem("miriCAN_obdWin") || "null"); } catch (e) {}
+function obdApplyGeo() {
+  const m = obdWinEl();
+  if (!m) return;
+  if (obdGeo) {
+    obdGeo.w = Math.max(600, Math.min((window.innerWidth || 1200) - 10, obdGeo.w || 1050));
+    obdGeo.h = Math.max(340, Math.min((window.innerHeight || 800) - 10, obdGeo.h || 620));
+    obdGeo.x = Math.max(0, Math.min((window.innerWidth || 1200) - 120, obdGeo.x || 60));
+    obdGeo.y = Math.max(0, Math.min((window.innerHeight || 800) - 60, obdGeo.y || 30));
+    m.classList.add("floating");
+    m.style.width = obdGeo.w + "px";
+    m.style.height = obdGeo.h + "px";
+    m.style.left = obdGeo.x + "px";
+    m.style.top = obdGeo.y + "px";
+  } else {
+    m.classList.remove("floating");
+    m.style.width = m.style.height = m.style.left = m.style.top = "";
+  }
+}
+function obdSaveGeo() {
+  try { localStorage.setItem("miriCAN_obdWin", JSON.stringify(obdGeo)); } catch (e) {}
+}
+(function initObdWindow() {
+  const m = obdWinEl();
+  if (!m) return;
+  const head = m.querySelector(".mhead");
+  if (head) head.addEventListener("mousedown", e => {
+    if ($("mObd").classList.contains("hidden") || e.target.closest("button")) return;
+    const r = m.getBoundingClientRect();
+    obdGeo = obdGeo || {w: r.width, h: r.height, x: r.left, y: r.top};
+    const sx = e.clientX, sy = e.clientY, ox = r.left, oy = r.top;
+    obdApplyGeo();
+    function mv(ev) {
+      obdGeo.x = ox + ev.clientX - sx;
+      obdGeo.y = oy + ev.clientY - sy;
+      obdApplyGeo();
+    }
+    function up() {
+      document.removeEventListener("mousemove", mv);
+      document.removeEventListener("mouseup", up);
+      obdSaveGeo();
+    }
+    document.addEventListener("mousemove", mv);
+    document.addEventListener("mouseup", up);
+    e.preventDefault();
+  });
+  obdGrip = document.createElement("div");
+  obdGrip.className = "modalresize";
+  obdGrip.title = "Przeciągnij, aby zmienić rozmiar (dwuklik = reset)";
+  obdGrip.style.display = "none";
+  m.appendChild(obdGrip);
+  obdGrip.addEventListener("mousedown", e => {
+    if ($("mObd").classList.contains("hidden")) return;
+    const r = m.getBoundingClientRect();
+    obdGeo = obdGeo || {w: r.width, h: r.height, x: r.left, y: r.top};
+    const sx = e.clientX, sy = e.clientY, ow = r.width, oh = r.height;
+    obdApplyGeo();
+    function mv(ev) {
+      obdGeo.w = ow + ev.clientX - sx;
+      obdGeo.h = oh + ev.clientY - sy;
+      obdApplyGeo();
+    }
+    function up() {
+      document.removeEventListener("mousemove", mv);
+      document.removeEventListener("mouseup", up);
+      obdSaveGeo();
+    }
+    document.addEventListener("mousemove", mv);
+    document.addEventListener("mouseup", up);
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  obdGrip.addEventListener("dblclick", () => {
+    obdGeo = null;
+    try { localStorage.removeItem("miriCAN_obdWin"); } catch (e) {}
+    obdApplyGeo();
+  });
+})();
+$("obConnect").onclick = async () => {
+  obdLine("łączę… (pierwsza próba może potrwać ~20 s — szukanie protokołu)", "notice");
+  const res = await post("/api/obd/connect", {port: $("obPort").value.trim()});
+  if (!res.ok) { obdLine("błąd: " + (res.error || "?")); toast("OBD: " + (res.error || "błąd"), "warn"); return; }
+  obdLine(`połączono: ${res.port}${res.adapter ? " · " + res.adapter : ""}` +
+          `${res.voltage != null ? " · " + res.voltage + " V" : ""}` +
+          `${res.bus === false ? " · brak odpowiedzi magistrali (zapłon?)" : " · magistrala OK"}`, "notice");
+  refreshObdStatus();
+  loadObdPidPicker(true);
+};
+$("obDisconnect").onclick = async () => { await post("/api/obd/disconnect"); obdLine("rozłączono"); refreshObdStatus(); loadObdPidPicker(true); };
+$("obTest").onclick = async () => {
+  const res = await post("/api/obd/connect", {port: $("obPort").value.trim()});
+  if (!res.ok) { obdLine("test: " + (res.error || "błąd")); return; }
+  obdLine(`test: ${res.adapter || "?"} · ${res.voltage != null ? res.voltage + " V" : "?"} · ` +
+          (res.bus ? "magistrala OK" : "brak odpowiedzi magistrali (zapłon ON?)"), "notice");
+  refreshObdStatus();
+};
+$("obRead").onclick = async () => {
+  const pids = obdSel();
+  if (!pids.length) { toast("Zaznacz PID-y do odczytu", "warn"); return; }
+  const res = await post("/api/obd/read", {pids});
+  if (!res.ok) { obdLine("odczyt: " + (res.error || "błąd")); toast("OBD: " + (res.error || "błąd"), "warn"); return; }
+  for (const r of res.rows) {
+    S.obdLive[r.pid] = {name: r.name, value: r.value, unit: r.unit, status: r.status, ts: Date.now()};
+  }
+  renderObdLive();
+  obdLine(`odczyt: ${res.rows.length} PID-ów`);
+};
+$("obMonStart").onclick = async () => {
+  const pids = obdSel();
+  if (!pids.length) { toast("Zaznacz PID-y do monitora", "warn"); return; }
+  const res = await post("/api/obd/monitor/start", {pids,
+    interval: parseFloat($("obInterval").value) || 0.5, save: $("obSave").checked});
+  if (!res.ok) { obdLine("monitor: " + (res.error || "błąd")); toast("OBD: " + (res.error || "błąd"), "warn"); return; }
+  obdLine(`monitor start: ${(res.pids || []).join(", ")}` + (res.saved ? ` → ${res.saved}` : ""), "notice");
+  refreshObdStatus();
+};
+$("obMonStop").onclick = async () => {
+  const res = await post("/api/obd/monitor/stop");
+  obdLine(`monitor stop (odczytów: ${res.rounds ?? 0}` + (res.saved ? `, zapis: ${res.saved}` : "") + ")", "notice");
+  refreshObdStatus();
+};
+function showVinDecode(dec) {
+  if (!dec || !dec.ok) return;
+  const box = $("obResults");
+  const L = [];
+  L.push(`<b>POJAZD (z VIN)</b> <span class="hint2">${dec.vin}</span>`);
+  if (dec.brand) L.push(`Marka: <b>${dec.brand}</b> <span class="hint2">(${dec.manufacturer || ""}${dec.country ? ", " + dec.country : ""})</span>`);
+  if (dec.model && dec.model.name) L.push(`Model/seria: <b>${dec.model.name}</b> <span class="hint2">(kod ${dec.model.code})</span>`);
+  if (dec.platform) L.push(`Platforma: <b>${dec.platform.name}</b> <span class="hint2">(${dec.platform.code}, orientacyjnie)</span>`);
+  if (dec.engine) L.push(`Silnik: <b>${dec.engine.name}</b> <span class="hint2">(kod ${dec.engine.code})</span>`);
+  if (dec.year_likely) {
+    const alt = (dec.year_candidates || []).filter(y => y !== dec.year_likely);
+    L.push(`Rok: <b>${dec.year_likely}</b> <span class="hint2">(kod ${dec.year_code}${alt.length ? "; możliwe też: " + alt.join(", ") : ""})</span>`);
+  }
+  if (dec.plant_name) L.push(`Fabryka: <b>${dec.plant_name}</b>`);
+  else if (dec.plant) L.push(`Fabryka: kod <b>${dec.plant}</b>`);
+  if (dec.check_digit && dec.check_digit.applicable)
+    L.push(`Suma kontrolna: <b>${dec.check_digit.valid ? "OK" : "niezgodna"}</b> <span class="hint2">(norma NA)</span>`);
+  for (const n of (dec.extra_notes || [])) L.push(`<span class="hint2">• ${n}</span>`);
+  box.appendChild(udsCard(L.join("<br>")));
+}
+$("obInfo").onclick = async () => {
+  const box = $("obResults"); box.innerHTML = "";
+  const res = await post("/api/obd/info");
+  if (!res.ok) { box.innerHTML = `<div class="merr">${res.error || "błąd"}</div>`; return; }
+  box.appendChild(udsCard(`VIN: <b>${res.vin || "— (brak odpowiedzi; zapłon ON?)"}</b>`));
+  box.appendChild(udsCard(`wspierane PID-y: <b>${res.count}</b>`));
+  if (res.vin) {
+    try { const dv = await post("/api/obd/vin", {vin: res.vin}); if (dv && dv.ok) showVinDecode(dv); } catch (e) {}
+  }
+  obdLine("info: VIN + wspierane PID-y");
+  loadObdPidPicker(true);
+};
+$("obDtc").onclick = async () => {
+  const box = $("obResults"); box.innerHTML = "";
+  const res = await post("/api/obd/dtc", {});
+  if (!res.ok) { box.innerHTML = `<div class="merr">${res.error || "błąd"}</div>`; return; }
+  box.appendChild(udsCard(`DTC: <b>${res.count}</b>` + (res.answered ? "" : " (brak odpowiedzi magistrali?)")));
+  for (const c of res.codes) box.appendChild(udsCard(`<b>${c}</b>`));
+  obdLine(`DTC: ${res.count} kod(ów)`);
+};
+$("obDtcClear").onclick = async () => {
+  if (!$("obDtcConfirm").checked) { toast("Zaznacz „potwierdzam kasowanie”", "warn"); return; }
+  const res = await post("/api/obd/dtc", {clear: true, confirm: true});
+  $("obDtcConfirm").checked = false;
+  if (!res.ok) { toast("Kasowanie: " + (res.error || "błąd"), "warn"); return; }
+  obdLine("kasowanie DTC: " + (res.cleared ? "OK" : "brak potwierdzenia"), "notice");
+  toast(res.cleared ? "DTC skasowane" : "Brak potwierdzenia kasowania", res.cleared ? "ok" : "warn");
+};
+
+/* --- Logger OBD (szkielet: ustawienia / odczyt / analiza) --- */
+function setOtab(tab) {
+  document.querySelectorAll(".otabs .fchip").forEach(b => b.classList.toggle("on", b.dataset.otab === tab));
+  ["cfg", "data", "an"].forEach(t => $("otab-" + t).classList.toggle("hidden", t !== tab));
+}
+document.querySelectorAll(".otabs .fchip").forEach(b => b.onclick = () => setOtab(b.dataset.otab));
+let obdPidTable = null;
+async function loadLoggerCfg() {
+  try {
+    if (!obdPidTable) {
+      const pl = await api("/api/obd/pids");
+      obdPidTable = pl.pids || [];
+      $("obCfgPids").innerHTML = obdPidTable.map(p =>
+        `<label class="chk"><input type="checkbox" data-oid="${p.pid}"> ${p.pid} ${p.name}</label>`).join("");
+    }
+    const res = await api("/api/obd/log/config");
+    const cfg = res.config || {};
+    const set = new Set(cfg.pids || []);
+    document.querySelectorAll("#obCfgPids input").forEach(inp => inp.checked = set.has(inp.dataset.oid));
+    $("obCfgInterval").value = cfg.interval ?? 0.5;
+    $("obCfgTarget").value = cfg.target || "pc";
+    $("obCfgState").textContent = cfg.note ? cfg.note : "";
+  } catch (e) {}
+}
+$("obCfgSave").onclick = async () => {
+  const pids = [...document.querySelectorAll("#obCfgPids input:checked")].map(i => i.dataset.oid);
+  const res = await post("/api/obd/log/config", {pids,
+    interval: parseFloat($("obCfgInterval").value) || 0.5, target: $("obCfgTarget").value});
+  if (res.ok) {
+    toast("Zapisano ustawienia loggera", "ok");
+    $("obCfgState").textContent = "zapisano " + new Date().toLocaleTimeString();
+    if (pids.length && obdPickerPids) obdSetSel(pids);  // pokaż też w panelu OBD
+  }
+};
+async function loadObdDataList() {
+  try {
+    const res = await api("/api/obd/logs");
+    const opts = (res.logs || []).map(l =>
+      `<option value="${l.name}">${l.name} · ${(l.size / 1024).toFixed(1)} kB</option>`).join("");
+    for (const id of ["obDataFile", "obAnFile"]) {
+      const sel = $(id); const keep = sel.value;
+      sel.innerHTML = `<option value="">— wybierz sesję —</option>` + opts;
+      if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+      else if ((res.logs || []).length) sel.value = res.logs[0].name;
+    }
+  } catch (e) {}
+}
+$("obDataRefresh").onclick = loadObdDataList;
+$("obDataToAn").onclick = () => {
+  $("obAnFile").value = $("obDataFile").value;
+  setOtab("an");
+  runObdStats();
+};
+$("obDevManifest").onclick = async () => {
+  const box = $("obDevFiles"); box.innerHTML = "";
+  const res = await post("/api/obd/device/manifest", {url: $("obDevUrl").value.trim()});
+  if (!res.ok) { $("obDevState").textContent = res.error || "błąd"; return; }
+  $("obDevState").textContent = `manifest OK — ${(res.files || []).length} plików`;
+  for (const f of (res.files || [])) {
+    const card = udsCard(`<b>${f.name}</b> · ${((f.size || 0) / 1024).toFixed(1)} kB `);
+    const btn = document.createElement("button");
+    btn.className = "fchip"; btn.textContent = "⤓ pobierz";
+    btn.onclick = async () => {
+      const r2 = await post("/api/obd/device/fetch", {url: $("obDevUrl").value.trim(), name: f.name});
+      if (r2.ok) { toast(`Pobrano ${r2.file}`, "ok"); loadObdDataList(); }
+      else toast("Pobieranie: " + (r2.error || "błąd"), "warn");
+    };
+    card.appendChild(btn);
+    box.appendChild(card);
+  }
+};
+async function runObdStats() {
+  const file = $("obAnFile").value;
+  if (!file) { toast("Wybierz sesję", "warn"); return; }
+  const res = await post("/api/obd/log/stats", {file});
+  const box = $("obAnOut"); box.innerHTML = "";
+  if (!res.ok) { box.innerHTML = `<div class="merr">${res.error || "błąd"}</div>`; return; }
+  box.appendChild(udsCard(`<b>${res.file}</b> · rekordów: <b>${res.records}</b> · czas: <b>${res.duration_s ?? "—"} s</b>`));
+  $("obAnPid").innerHTML = (res.pids || []).map(p =>
+    `<option value="${p.pid}">${p.pid} ${p.name}</option>`).join("");
+  for (const p of (res.pids || [])) {
+    box.appendChild(udsCard(`${p.pid} <b>${p.name}</b> · n=${p.count} · min <b>${p.min}</b> · max <b>${p.max}</b> · śr <b>${p.avg}</b> ${p.unit}`));
+  }
+}
+$("obAnRun").onclick = runObdStats;
+$("obAnPlot").onclick = async () => {
+  const file = $("obAnFile").value, pid = $("obAnPid").value;
+  if (!file || !pid) { toast("Wybierz sesję i PID", "warn"); return; }
+  const res = await post("/api/obd/log/series", {file, pid});
+  if (!res.ok) { toast("Wykres: " + (res.error || "błąd"), "warn"); return; }
+  drawObdChart(res);
+};
+function drawObdChart(ser) {
+  const cv = $("obAnCanvas");
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth || 600, h = cv.clientHeight || 180;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.font = "10px monospace";
+  const t = ser.t || [], v = ser.v || [];
+  if (!v.length) { ctx.fillStyle = "#667"; ctx.fillText("brak danych w sesji", 10, 18); return; }
+  const t0 = t[0], t1 = t[t.length - 1] || t0 + 1;
+  let vmin = Math.min(...v), vmax = Math.max(...v);
+  if (vmin === vmax) { vmin -= 1; vmax += 1; }
+  const pad = 26;
+  const X = x => pad + (x - t0) / ((t1 - t0) || 1) * (w - 2 * pad);
+  const Y = y => h - pad - (y - vmin) / (vmax - vmin) * (h - 2 * pad);
+  ctx.strokeStyle = "#243040"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, h - pad); ctx.lineTo(w - pad, h - pad); ctx.stroke();
+  ctx.strokeStyle = "#ffb300"; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i < v.length; i++) { i ? ctx.lineTo(X(t[i]), Y(v[i])) : ctx.moveTo(X(t[i]), Y(v[i])); }
+  ctx.stroke();
+  ctx.fillStyle = "#8899aa";
+  ctx.fillText(vmax.toFixed(1), 3, 12);
+  ctx.fillText(vmin.toFixed(1), 3, h - 6);
+  ctx.fillText(`${ser.pid} · ${ser.count} pkt z ${ser.records}`, pad + 2, 12);
+}
+
+/* --- Diagnostyka (UDS) --- */
+let udsBusy = false;
+function udsLine(text, cls = "") {
+  const box = $("udLog");
+  if (!box) return;
+  const div = document.createElement("div");
+  div.className = cls; div.textContent = text;
+  box.appendChild(div);
+  while (box.children.length > 300) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+function udsSetBusy(on, label = "") {
+  udsBusy = on;
+  $("udScan").disabled = on; $("udRead").disabled = on; $("udDtc").disabled = on;
+  $("udWrite").disabled = on; $("udClear").disabled = on;
+  $("udScanStatus").textContent = on ? label : "";
+}
+function udsCard(html) {
+  const div = document.createElement("div");
+  div.className = "mcard"; div.innerHTML = html;
+  return div;
+}
+$("udScan").onclick = async () => {
+  if (udsBusy) return;
+  const ids = $("udRange").value.trim() || "600-6FF";
+  const payload = {ids, offset: parseInt($("udOffset").value, 10) || 8,
+                   timeout_ms: parseFloat($("udTimeout").value) || 50};
+  udsSetBusy(true, "skanuję…");
+  udsLine(`skan: ${ids} (offset +${payload.offset}, timeout ${payload.timeout_ms} ms) — podgląd na żywo pauzuje`, "notice");
+  try {
+    const res = await post("/api/uds/scan", payload);
+    const box = $("udResults"); box.innerHTML = "";
+    if (!res.ok) { udsLine("błąd: " + (res.error || "?")); toast("UDS: " + (res.error || "błąd"), "warn"); return; }
+    udsLine(`znaleziono ${res.count} / ${res.checked} adresów`, "notice");
+    for (const r of res.results) {
+      const card = udsCard(`<b>0x${r.txid.toString(16).toUpperCase()} → 0x${r.rxid.toString(16).toUpperCase()}</b>` +
+        ` · odpowiedź: <b>${r.payload}</b>  <span class="hint2">(kliknij = ustaw txid)</span>`);
+      card.style.cursor = "pointer"; card.dataset.tx = r.txid.toString(16).toUpperCase();
+      box.appendChild(card);
+    }
+    if (res.results.length) {
+      $("udTx").value = res.results[0].txid.toString(16).toUpperCase();
+    } else {
+      box.appendChild(udsCard(`<span class="merr">Brak odpowiedzi — sprawdź zakres/offset/timeout. W demo działa zakres 6F0-6FF.</span>`));
+    }
+  } finally { udsSetBusy(false); }
+};
+$("udResults").addEventListener("click", e => {
+  const el = e.target.closest("[data-tx]");
+  if (el) { $("udTx").value = el.dataset.tx; toast("txid: 0x" + el.dataset.tx, "ok"); }
+});
+$("udRead").onclick = async () => {
+  if (udsBusy) return;
+  const txid = $("udTx").value.trim();
+  if (!txid) { toast("Podaj txid sterownika (np. 6F1)", "warn"); return; }
+  const dids = $("udDids").value.split(/[\s,;]+/).filter(Boolean);
+  udsSetBusy(true, "czytam…");
+  try {
+    const res = await post("/api/uds/read", {txid, rxid: $("udRx").value.trim(),
+                                             session: $("udSession").value, dids});
+    if (!res.ok) { udsLine("błąd: " + (res.error || "")); toast("UDS: " + (res.error || "błąd"), "warn"); return; }
+    udsLine(`odczyt: 0x${res.txid.toString(16).toUpperCase()} → 0x${res.rxid.toString(16).toUpperCase()}` +
+            (res.session_ok === false ? " · sesja odrzucona" : ""), "notice");
+    const box = $("udResults"); box.innerHTML = "";
+    for (const d of (res.dids || [])) {
+      const tag = "0x" + d.did.toString(16).toUpperCase().padStart(4, "0");
+      box.appendChild(udsCard(d.positive
+        ? `<b>${tag}</b> ${d.name ? "· " + d.name : ""} — <b>${d.hex}</b>` + (d.text ? `  „${d.text}”` : "")
+        : `<b>${tag}</b> — odmowa: ${d.code}`));
+    }
+  } finally { udsSetBusy(false); }
+};
+$("udDtc").onclick = async () => {
+  if (udsBusy) return;
+  const txid = $("udTx").value.trim() || "6F1";
+  udsSetBusy(true, "czytam DTC…");
+  try {
+    const res = await post("/api/uds/dtc", {txid, rxid: $("udRx").value.trim(),
+                                             session: $("udSession").value});
+    if (!res.ok) { udsLine("błąd: " + (res.error || "")); toast("UDS: " + (res.error || "błąd"), "warn"); return; }
+    udsLine(`DTC: ${res.count == null ? (res.dtcs || []).length : res.count}`, "notice");
+    const box = $("udResults"); box.innerHTML = "";
+    if (!res.dtcs || !res.dtcs.length) { box.appendChild(udsCard("Brak zapisanych błędów.")); return; }
+    for (const d of res.dtcs) {
+      const card = udsCard(""); card.textContent = d.text; box.appendChild(card);
+    }
+  } finally { udsSetBusy(false); }
+};
+$("udWrite").onclick = async () => {
+  if (udsBusy) return;
+  const txid = $("udTx").value.trim();
+  if (!txid) { toast("Podaj txid sterownika", "warn"); return; }
+  if (!$("udWConfirm").checked) { toast("Zaznacz „potwierdzam zapis”", "warn"); return; }
+  const did = $("udWDid").value.trim(), data = $("udWData").value.trim();
+  if (!did || !data) { toast("Podaj DID i dane (hex)", "warn"); return; }
+  udsSetBusy(true, "zapisuję…");
+  try {
+    const res = await post("/api/uds/write", {txid, rxid: $("udRx").value.trim(),
+      session: $("udSession").value, did, data, confirm: true});
+    $("udWConfirm").checked = false;
+    if (!res.ok) { udsLine("zapis: błąd — " + (res.error || "?")); toast("UDS: " + (res.error || "błąd"), "warn"); return; }
+    const tag = res.did.toString(16).toUpperCase().padStart(4, "0");
+    udsLine(`zapis 0x${tag}: OK  [${res.written}]`, "notice");
+    toast("Zapis OK", "ok");
+  } finally { udsSetBusy(false); }
+};
+$("udClear").onclick = async () => {
+  if (udsBusy) return;
+  const txid = $("udTx").value.trim() || "6F1";
+  if (!$("udCConfirm").checked) { toast("Zaznacz „potwierdzam kasowanie”", "warn"); return; }
+  udsSetBusy(true, "kasuję DTC…");
+  try {
+    const res = await post("/api/uds/dtc", {txid, rxid: $("udRx").value.trim(),
+      session: $("udSession").value, clear: true, confirm: true});
+    $("udCConfirm").checked = false;
+    if (!res.cleared) { udsLine("kasowanie DTC: błąd — " + (res.clear_error || res.error || "?")); toast("UDS: błąd kasowania", "warn"); return; }
+    udsLine("kasowanie DTC: OK", "notice");
+    toast("DTC skasowane", "ok");
+  } finally { udsSetBusy(false); }
+};
+
+/* --- Sniffer --- */
+let btnAbort = false;
+function beep(freq = 880, dur = 0.12) {
+  if (!$("btnBeep").checked) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    window.__ac = window.__ac || new AC();
+    const o = window.__ac.createOscillator(), g = window.__ac.createGain();
+    o.frequency.value = freq; g.gain.value = 0.07;
+    o.connect(g); g.connect(window.__ac.destination);
+    o.start(); o.stop(window.__ac.currentTime + dur);
+  } catch (e) {}
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runButtonAnalysis(label, file) {
+  const res = await post("/api/analyze/button", {file, label});
+  const box = $("btnResults");
+  if (!res.ok) { box.innerHTML = `<div class="merr">${res.error}</div>`; return; }
+  let html = `<div class="mmeta">${res.file} · pulsów: ${res.pulses} · etykieta „${res.label}”</div>`;
+  if (!res.candidates.length) {
+    html += `<div class="mmeta">Brak kandydatów — spróbuj trzymać przycisk dłużej lub zrobić więcej pulsów.</div>`;
+  } for (const c of res.candidates) {
+    const where = `bajt ${c.byte}` + (c.bit !== null && c.bit !== undefined ? ` · bit ${c.bit}` : "");
+    const conf = Math.round((c.confidence || 0) * 100);
+    const badge = conf >= 70 ? "🟢" : conf >= 40 ? "🟡" : "⚪";
+    html += `<div class="mcard"><div class="mcardh">0x${idHex(c.id, c.ext)} · ${where} — ` +
+      `trafienia ${c.hits}/${c.total}` +
+      (c.delay_ms != null
+        ? ` · opóźnienie ~${c.delay_ms} ms` + (c.delay_spread_ms != null ? ` (±${c.delay_spread_ms})` : "")
+        : "") +
+      ` · pewność ${badge} ${conf}% · tło ~${(c.baseline * 100).toFixed(0)}%</div>`;
+    html += clsLine("wartości", `przed ${c.before} → trzymany ${c.held}`,
+      (c.returns ? `wraca po puszczeniu (${c.returns}/${c.hits}) · ` : "") + (c.note || ""), false);
+    html += `<div class="rrow"><button class="fchip" onclick="__pinFromBtn(${c.key}, ${c.byte})">📈 przypnij bajt do wykresu</button></div></div>`;
+  }
+  if (res.candidates.length) {
+    const top = res.candidates[0];
+    if (top.hits === top.total && top.baseline <= 0.5 && (top.confidence ?? 1) >= 0.5) {
+      const tkey = top.key !== undefined ? top.key : (top.ext ? top.id + 0x20000000 : top.id);
+      if (traceIndex("byte", tkey, top.byte) < 0) {
+        toggleByteTrace(tkey, top.byte);
+        toast("Auto-przypięto najlepszego kandydata do wykresu", "ok");
+      }
+    }
+  }
+  box.innerHTML = html;
+}
+window.__pinFromBtn = (aid, byte) => { closeModal(); toggleByteTrace(aid, byte); };
+
+async function startButtonSession() {
+  const st = await api("/api/status");
+  S.connected = !!st.connected;
+  updateConn();
+  if (!st.connected) { toast("Najpierw połącz się z magistralą", "warn"); return; }
+  const label = $("btnLabel").value.trim() || "przycisk";
+  const pulses = Math.max(1, parseInt($("btnPulses").value || "5", 10));
+  const holdMs = Math.max(300, parseInt($("btnHold").value || "1500", 10));
+  const gapMs = Math.max(300, parseInt($("btnGap").value || "2500", 10));
+  let ownRec = false;
+  let recName = st.log ? st.log.split("\\").pop() : null;
+  if (!st.recording) {
+    const r = await post("/api/record/start");
+    if (!r.ok) { toast("REC: " + (r.error || "błąd"), "warn"); return; }
+    ownRec = true;
+    recName = r.name || recName;
+  }
+  closeModal();
+  const ov = $("pulseOverlay");
+  ov.classList.remove("hidden");
+  const circle = $("pulseCircle"), state = $("pulseState"), cnt = $("pulseCount"), hint = $("pulseHint");
+  btnAbort = false;
+  $("pulseAbort").onclick = () => { btnAbort = true; };
+
+  async function countdown(sec, msg, cls) {
+    state.textContent = msg;
+    circle.className = "pulseCircle " + cls;
+    for (let s = sec; s > 0; s--) {
+      if (btnAbort) return false;
+      cnt.textContent = s;
+      await sleep(1000);
+    }
+    return !btnAbort;
+  }
+  try {
+    for (let k = 1; k <= pulses; k++) {
+      hint.textContent = `Puls ${k}/${pulses} — ręka przy przycisku…`;
+      if (!(await countdown(3, `PULS ${k}/${pulses}`, "prep"))) throw new Error("abort");
+      await post("/api/mark", {label: `${label} DOWN #${k}`});
+      beep(1320, 0.15);
+      circle.className = "pulseCircle hold";
+      state.textContent = "TRZYMAJ!";
+      hint.textContent = "Trzymaj przycisk wciśnięty…";
+      for (let t = 0; t < holdMs; t += 200) {
+        if (btnAbort) throw new Error("abort");
+        cnt.textContent = Math.max(0, Math.ceil((holdMs - t) / 1000));
+        await sleep(200);
+      }
+      await post("/api/mark", {label: `${label} UP #${k}`});
+      beep(660, 0.1);
+      circle.className = "pulseCircle rest";
+      state.textContent = "PUŚĆ!";
+      hint.textContent = "Odpocznij…";
+      if (!(await countdown(Math.round(gapMs / 1000), "PRZERWA", "rest"))) throw new Error("abort");
+    }
+    state.textContent = "ANALIZUJĘ…"; cnt.textContent = "…"; hint.textContent = "";
+    ov.classList.add("hidden");
+    if (ownRec) await post("/api/record/stop");
+    refreshSession();
+    if (recName) $("btnFile").dataset.prefer = recName;
+    openModal("btn");
+    if (recName) await runButtonAnalysis(label, "logs/" + recName);
+    else toast("Nie znam nazwy logu — wybierz go ręcznie z listy", "warn");
+  } catch (e) {
+    ov.classList.add("hidden");
+    if (ownRec) await post("/api/record/stop");
+    refreshSession();
+    toast(String(e.message) === "abort" ? "Sesja przerwana" : ("Błąd sesji: " + e.message), "warn");
+  }
+}
+$("btnStart").onclick = () => startButtonSession().catch(e => toast("Sniffer: błąd — " + e.message, "warn"));
+$("btnAnalyze").onclick = () => {
+  const file = $("btnFile").value;
+  if (!file) { toast("Wybierz log z listy", "warn"); return; }
+  runButtonAnalysis($("btnLabel").value.trim() || "przycisk", file);
+};
+
+/* algorytmy sum do listy wyboru */
+fetch("/api/algos").then(r => r.json()).then(d => { S.algos = d.algos || []; }).catch(() => {});
+
+/* ---------- start + stan z adresu (np. #demo=1&view=grouped&select=0x130) ---------- */
+$("ifaceSel").onchange();
+loadPorts(); loadDbcList();
+setInterval(() => { if (!S.connected) loadPorts(); }, 4000);
+refreshSession().then(() => {
+  if (S.connected) $("emptyMsg").style.display = "none";
+  updateConn();
+});
+attachWS();
+loadProfiles();
+refreshMcp();
+
+/* --- regulacja podokien (splitters) --- */
+const LSget = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const LSset = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+
+const dockBtn = $("dockToggle");
+function setDockCollapsed(on) {
+  const p = $("dockPanel");
+  if (on) { if (p.style.height) p.dataset.h = p.style.height; p.style.height = ""; }
+  else if (p.dataset.h) p.style.height = p.dataset.h;
+  p.classList.toggle("collapsed", on);
+  dockBtn.textContent = on ? "▸ rozwiń" : "▾ zwiń";
+  LSset("miriCAN_dock", on ? "1" : "0");
+}
+dockBtn.onclick = () => setDockCollapsed(!$("dockPanel").classList.contains("collapsed"));
+
+function dragHandle(el, onMove, cursor) {
+  el.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    if (cursor) document.body.style.cursor = cursor;
+    const move = ev => onMove(ev, e);
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  });
+}
+
+/* wysokość docka (górna krawędź) */
+(function () {
+  const grip = $("dockGrip");
+  const p = $("dockPanel");
+  const setH = h => {
+    h = Math.max(80, Math.min(window.innerHeight * 0.75, Math.round(h)));
+    p.style.height = h + "px";
+    LSset("miriCAN_dockH", String(h));
+  };
+  grip.addEventListener("dblclick", () => setH(230));
+  grip.addEventListener("pointerdown", () => { p.dataset.h0 = String(p.getBoundingClientRect().height); });
+  dragHandle(grip, (ev, down) => setH((parseFloat(p.dataset.h0) || 230) + (down.clientY - ev.clientY)), "row-resize");
+  const h = parseFloat(LSget("miriCAN_dockH") || "0");
+  if (h) p.style.height = h + "px";
+})();
+
+/* proporcje kolumn docka — 3 panele (2 separatory) */
+(function () {
+  const vs1 = $("dockVs"), vs2 = $("dockVs2");
+  const dbody = () => $("dockPanel").querySelector(".dbody");
+  const cols = [$("cardCls"), $("cardSig"), $("cardExtra")];
+  const DEF = [0.32, 0.45, 0.23];
+  let g = DEF.slice();
+  const applyG = (save) => {
+    const f = g.map(v => Math.max(0.06, v));
+    const s = f[0] + f[1] + f[2];
+    cols.forEach((c, i) => { if (c) c.style.flexGrow = String(f[i] / s); });
+    if (save !== false) LSset("miriCAN_dockSplit3", JSON.stringify(g));
+  };
+  const reset = () => { g = DEF.slice(); applyG(); };
+  try {
+    const arr = JSON.parse(LSget("miriCAN_dockSplit3") || "null");
+    if (Array.isArray(arr) && arr.length === 3) g = arr.map(Number);
+  } catch (e) {}
+  if (vs1) {
+    vs1.addEventListener("dblclick", reset);
+    dragHandle(vs1, ev => {
+      const r = dbody().getBoundingClientRect();
+      const u = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+      const s01 = g[0] + g[1];
+      g[0] = Math.min(Math.max(u, 0.06), s01 - 0.06);
+      g[1] = s01 - g[0];
+      applyG();
+    }, "col-resize");
+  }
+  if (vs2) {
+    vs2.addEventListener("dblclick", reset);
+    dragHandle(vs2, ev => {
+      const r = dbody().getBoundingClientRect();
+      const u = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+      const s12 = g[1] + g[2];
+      const g1 = Math.min(Math.max(u - g[0], 0.06), s12 - 0.06);
+      g[1] = g1;
+      g[2] = s12 - g1;
+      applyG();
+    }, "col-resize");
+  }
+  applyG(false);
+})();
+
+/* szerokość prawej kolumny (lewa krawędź asaide) */
+(function () {
+  const grip = $("asideGrip");
+  const setW = w => {
+    w = Math.max(240, Math.min(680, Math.round(w)));
+    document.documentElement.style.setProperty("--asideW", w + "px");
+    LSset("miriCAN_asideW", String(w));
+  };
+  grip.addEventListener("dblclick", () => setW(340));
+  grip.addEventListener("pointerdown", () => {
+    grip.dataset.w0 = String(document.querySelector(".right").getBoundingClientRect().width);
+  });
+  dragHandle(grip, (ev, down) => setW((parseFloat(grip.dataset.w0) || 340) + (down.clientX - ev.clientX)), "col-resize");
+  const w = parseFloat(LSget("miriCAN_asideW") || "0");
+  if (w) setW(w);
+})();
+
+try { if (LSget("miriCAN_dock") === "1") setDockCollapsed(true); } catch (e) {}
+
+const HS = new URLSearchParams(location.hash.slice(1));
+if (HS.get("view") === "grouped") setView("grouped");
+if (HS.get("adv") === "1") setTxAdv(true);
+if (HS.get("demo") === "1") {
+  $("ifaceSel").value = "virtual"; $("ifaceSel").onchange();
+  refreshSession().then(() => { if (!S.connected) connect(); });
+}
+if (HS.get("modal") === "an") {
+  if (HS.get("file")) { $("anFile").dataset.prefer = HS.get("file"); $("mkFile").dataset.prefer = HS.get("file"); }
+  if (HS.get("dffile_a")) $("dfA").dataset.prefer = HS.get("dffile_a");
+  if (HS.get("dffile_b")) $("dfB").dataset.prefer = HS.get("dffile_b");
+  openModal("an", HS.get("mtab") || "quick");
+  if (HS.get("run") === "1") setTimeout(() => {
+    (HS.get("mtab") === "markers" ? $("mkRun") : $("anRun")).click();
+  }, 900);
+  if (HS.get("dfrun") === "1") setTimeout(() => $("dfRun").click(), 1100);
+}
+if (HS.get("modal") === "mitm") {
+  openModal("mitm");
+  if (HS.get("mifill") === "1") setTimeout(() => $("miFillDemo").click(), 300);
+  if (HS.get("mistart") === "1") setTimeout(() => $("miStart").click(), 800);
+}
+if (HS.get("modal") === "btn") {
+  openModal("btn");
+  if (HS.get("btnlabel")) $("btnLabel").value = HS.get("btnlabel");
+  if (HS.get("btnpulses")) $("btnPulses").value = HS.get("btnpulses");
+  if (HS.get("btnhold")) $("btnHold").value = HS.get("btnhold");
+  if (HS.get("btngap")) $("btnGap").value = HS.get("btngap");
+  if (HS.get("btnfile")) setTimeout(() => runButtonAnalysis(HS.get("btnlabel") || "przycisk", HS.get("btnfile")), 1800);
+  if (HS.get("btnrun") === "1") setTimeout(() => startButtonSession(), 1500);
+}
+if (HS.get("modal") === "uds") {
+  openModal("uds");
+  if (HS.get("udids")) $("udRange").value = HS.get("udids");
+  if (HS.get("udtx")) $("udTx").value = HS.get("udtx");
+  // auto-uruchomienie tylko w demo (bezpieczeństwo: link nie nadaje na realnej magistrali)
+  if (HS.get("udrun") === "1" && HS.get("demo") === "1") setTimeout(() => $("udScan").click(), 1800);
+  if (HS.get("udread") === "1" && HS.get("demo") === "1") setTimeout(() => $("udRead").click(), 4600);
+}
+if (HS.get("modal") === "log") {
+  if (HS.get("lgfile")) $("lgStatsFile").dataset.prefer = HS.get("lgfile");
+  openModal("log");
+  if (HS.get("lgrun") === "1") setTimeout(() => $("lgStatsRun").click(), 2500);
+}
+if (HS.get("modal") === "obd") {
+  openModal("obd");
+  if (HS.get("obconnect") === "1") setTimeout(() => $("obConnect").click(), 600);
+}
+if (HS.get("modal") === "logger") {
+  openModal("logger");
+  if (HS.get("oltab")) setOtab(HS.get("oltab"));
+}
+if (HS.get("dbc")) setTimeout(() => {
+  const sel = $("dbcSel");
+  const want = HS.get("dbc").replace(/\.dbc$/i, "");
+  const cand = [...sel.options].find(o => o.value.endsWith(".dbc") && o.value.includes(want));
+  if (cand) { sel.value = cand.value; sel.dispatchEvent(new Event("change")); }
+}, 900);
+if (HS.get("pins")) setTimeout(() => {
+  for (const spec of HS.get("pins").split(",")) {
+    const parts = spec.split(":");
+    if (parts.length < 2) continue;
+    let aid = parseInt(parts[0], 16);
+    if (aid > 0x7FF) aid += 0x20000000;
+    const key = parts[1];
+    S.sel = aid;
+    if (/^b\d+$/.test(key)) toggleByteTrace(aid, parseInt(key.slice(1), 10));
+    else toggleSigTrace(aid, key);
+  }
+}, 2800);
+if (HS.get("filter")) {
+  $("filterInp").value = HS.get("filter");
+  S.filter = HS.get("filter").toLowerCase();
+  setTimeout(refilterAll, 1500);
+}
+if (HS.get("select")) {
+  let want = parseInt(HS.get("select"), 16);
+  if (want > 0x7FF) want += 0x20000000;
+  const iv = setInterval(() => {
+    if (S.idHist[want] && S.idHist[want].length > 5) {
+      selectId(want); clearInterval(iv);
+      if (HS.get("tab")) switchTab(HS.get("tab"));
+    }
+  }, 300);
+}
+</script>
+</body>
+</html>
